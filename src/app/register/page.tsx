@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import type { z } from "zod";
-import Image from "next/image";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { registerSchema } from "@/lib/types/auth";
-import { useAuth } from "@/contexts/auth/AuthContext";
 import { useRegister } from "@/hooks/auth/useRegister";
+import { useGeolocation } from "@/hooks/location/useGeoLocation";
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
@@ -22,8 +21,8 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { login } = useAuth();
   const register = useRegister();
+  const { getLocation } = useGeolocation();
 
   const {
     register: registerField,
@@ -35,13 +34,17 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      const response = await register.mutateAsync(data);
-      if (response.token) {
-        login(response.token);
-        router.push("/");
-      }
-    } catch (error: any) {
-      setError(error.message);
+      setError("");
+      setIsLoading(true);
+      const location = await getLocation();
+      await register.mutateAsync({
+        ...data,
+        location
+      });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -1,11 +1,12 @@
 // layout.tsx
-'use client';
+"use client";
 
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth/AuthContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Sidebar } from "@/components/sidebar/SideBar";
 
 const queryClient = new QueryClient();
 
@@ -28,9 +29,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <main className="flex-1 md:pl-64">{children}</main>
+            </div>
+          </AuthProvider>
         </QueryClientProvider>
       </body>
     </html>

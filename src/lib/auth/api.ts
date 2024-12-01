@@ -1,3 +1,4 @@
+import { useAuthStore } from "../store/authStore";
 import { AuthService } from "./auth";
 
 interface FetchOptions extends RequestInit {
@@ -32,18 +33,21 @@ const fetchWithAuth = async <T>(
   const { controller, timeoutId } = createAbortController(timeout);
 
   try {
-    const token = AuthService.getToken();
+    const token = useAuthStore.getState().token;
+    const headers = new Headers({
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    });
+
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       ...fetchOptions,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
+      headers,
       signal: controller.signal,
     });
 
-    return handleResponse(response);
+    const data = await handleResponse(response);
+    return data as T;
   } finally {
     clearTimeout(timeoutId);
   }
