@@ -21,4 +21,11 @@ export interface UserDto {
   };
   createdAt: string;
   updatedAt?: string;
+  profilePicturePath?: string;
 }
+
+export interface UpdateUserPersonalInfoDto {
+  name: string;
+  profilePicture?: File;
+}
+

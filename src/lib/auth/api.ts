@@ -34,8 +34,9 @@ const fetchWithAuth = async <T>(
 
   try {
     const token = useAuthStore.getState().token;
+    const isFormData = fetchOptions.body instanceof FormData;
     const headers = new Headers({
-      "Content-Type": "application/json",
+      ...(!isFormData && { "Content-Type": "application/json" }),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     });
@@ -64,12 +65,19 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  put: <T>(endpoint: string, data: unknown, options?: FetchOptions) =>
-    fetchWithAuth<T>(endpoint, {
+  put: <T>(endpoint: string, data: unknown, options?: FetchOptions) => {
+    const isFormData = data instanceof FormData;
+    const headers = {
+      ...(!isFormData && { "Content-Type": "application/json" }),
+    };
+
+    return fetchWithAuth<T>(endpoint, {
       ...options,
       method: "PUT",
-      body: JSON.stringify(data),
-    }),
+      headers,
+      body: isFormData ? data : JSON.stringify(data),
+    });
+  },
 
   delete: <T>(endpoint: string, options?: FetchOptions) =>
     fetchWithAuth<T>(endpoint, {
