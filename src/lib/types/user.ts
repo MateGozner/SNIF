@@ -7,6 +7,12 @@ export interface PetDto {
   breed: string;
 }
 
+export interface PreferencesDto {
+  searchRadius: number;
+  showOnlineStatus: boolean;
+  notificationSettings?: NotificationSettings;
+}
+
 export interface UserDto {
   id: string;
   email: string;
@@ -16,9 +22,7 @@ export interface UserDto {
   breederVerification?: {
     isVerified: boolean;
   };
-  preferences?: {
-    searchRadius: number;
-  };
+  preferences?: PreferencesDto;
   createdAt: string;
   updatedAt?: string;
   profilePicturePath?: string;
@@ -29,3 +33,19 @@ export interface UpdateUserPersonalInfoDto {
   profilePicture?: File;
 }
 
+export interface NotificationSettings {
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  newMatchNotifications: boolean;
+  messageNotifications: boolean;
+  breedingRequestNotifications: boolean;
+  playdateRequestNotifications: boolean;
+  notificationStartTime?: string;
+  notificationEndTime?: string;
+}
+
+export interface UpdatePreferencesDto {
+  searchRadius: number;
+  notificationSettings?: NotificationSettings;
+  showOnlineStatus: boolean;
+}
