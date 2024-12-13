@@ -58,12 +58,15 @@ export const api = {
   get: <T>(endpoint: string, options?: FetchOptions) =>
     fetchWithAuth<T>(endpoint, options),
 
-  post: <T>(endpoint: string, data: unknown, options?: FetchOptions) =>
-    fetchWithAuth<T>(endpoint, {
+  post: <T>(endpoint: string, data: unknown, options?: FetchOptions) => {
+    const isFormData = data instanceof FormData;
+    
+    return fetchWithAuth<T>(endpoint, {
       ...options,
       method: "POST",
-      body: JSON.stringify(data),
-    }),
+      body: isFormData ? data : JSON.stringify(data),
+    });
+  },
 
   put: <T>(endpoint: string, data: unknown, options?: FetchOptions) => {
     const isFormData = data instanceof FormData;
