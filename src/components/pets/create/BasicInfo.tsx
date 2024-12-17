@@ -28,13 +28,15 @@ import {
   getBreedsBySpecies,
 } from "@/lib/validation/pets";
 import { PET_SPECIES } from "@/lib/constants/pets";
+import { cn } from "@/lib/utils";
 
 interface BasicInfoProps {
   initialData: Partial<BasicInfoForm>;
   onNext: (data: BasicInfoForm) => void;
+  className?: string;
 }
 
-export function BasicInfo({ initialData, onNext }: BasicInfoProps) {
+export function BasicInfo({ initialData, onNext, className }: BasicInfoProps) {
   const form = useForm<BasicInfoForm>({
     resolver: zodResolver(basicInfoSchema),
     defaultValues: {
@@ -69,7 +71,10 @@ export function BasicInfo({ initialData, onNext }: BasicInfoProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onNext)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onNext)}
+        className={cn("space-y-6", className)}
+      >
         <FormField
           control={form.control}
           name="name"

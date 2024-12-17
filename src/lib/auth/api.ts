@@ -22,6 +22,9 @@ const handleResponse = async (response: Response) => {
     }
     throw new Error(await response.text());
   }
+
+  if (response.status === 204) return null
+
   return response.json();
 };
 
@@ -60,7 +63,7 @@ export const api = {
 
   post: <T>(endpoint: string, data: unknown, options?: FetchOptions) => {
     const isFormData = data instanceof FormData;
-    
+
     return fetchWithAuth<T>(endpoint, {
       ...options,
       method: "POST",
@@ -82,9 +85,13 @@ export const api = {
     });
   },
 
-  delete: <T>(endpoint: string, options?: FetchOptions) =>
-    fetchWithAuth<T>(endpoint, {
+  delete: async <T>(
+    endpoint: string,
+    options?: FetchOptions
+  ): Promise<T | null> => {
+    return fetchWithAuth<T>(endpoint, {
       ...options,
       method: "DELETE",
-    }),
+    });
+  },
 };

@@ -33,14 +33,21 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { CreatePetDto } from "@/lib/types/pet";
+import { cn } from "@/lib/utils";
 
 interface HealthInfoProps {
   initialData: Partial<CreatePetDto>;
   onNext: (data: Partial<CreatePetDto>) => void;
   onBack: () => void;
+  classname?: string;
 }
 
-export function HealthInfo({ initialData, onNext, onBack }: HealthInfoProps) {
+export function HealthInfo({
+  initialData,
+  onNext,
+  onBack,
+  classname,
+}: HealthInfoProps) {
   const [newCustomIssue, setNewCustomIssue] = useState("");
 
   const form = useForm<HealthInfoForm>({
@@ -58,7 +65,7 @@ export function HealthInfo({ initialData, onNext, onBack }: HealthInfoProps) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((data) => onNext(data))}
-        className="space-y-6"
+        className={cn("space-y-6", classname)}
       >
         <FormField
           control={form.control}

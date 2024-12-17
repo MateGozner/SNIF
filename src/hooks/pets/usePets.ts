@@ -24,6 +24,8 @@ export function useCreatePet() {
     mutationFn: async (data: CreatePetDto) => {
       const formData = new FormData();
 
+      console.log("Creating pet:", data);
+
       // Basic info
       if (data.name) formData.append("Name", data.name);
       if (data.species) formData.append("Species", data.species);
@@ -39,15 +41,54 @@ export function useCreatePet() {
         });
       }
       if (data.personality?.length) {
-        formData.append("Personality", JSON.stringify(data.personality));
+        data.personality.forEach((personality, index) => {
+          formData.append(`Personality[${index}]`, personality.toString());
+        });
       }
 
       // Nested objects
       if (data.medicalHistory) {
-        formData.append("MedicalHistory", JSON.stringify(data.medicalHistory));
+        if (data.medicalHistory.lastCheckup) {
+          formData.append(
+            "MedicalHistory.LastCheckup",
+            data.medicalHistory.lastCheckup.toString()
+          );
+        }
+        if (data.medicalHistory.vetContact) {
+          formData.append(
+            "MedicalHistory.VetContact",
+            data.medicalHistory.vetContact
+          );
+        }
+        if (data.medicalHistory.isVaccinated !== undefined)
+          formData.append(
+            "MedicalHistory.IsVaccinated",
+            data.medicalHistory.isVaccinated.toString()
+          );
+        formData.append(
+          "MedicalHistory.IsVaccinated",
+          data.medicalHistory.isVaccinated.toString()
+        );
+        if (data.medicalHistory.vaccinationRecords?.length) {
+          data.medicalHistory.vaccinationRecords.forEach((vaccine, index) => {
+            formData.append(
+              `MedicalHistory.VaccinationRecords[${index}]`,
+              vaccine
+            );
+          });
+        }
+        if (data.medicalHistory.healthIssues?.length) {
+          data.medicalHistory.healthIssues?.forEach((issue, index) => {
+            formData.append(`MedicalHistory.HealthIssues[${index}]`, issue);
+          });
+        }
       }
       if (data.location) {
-        formData.append("Location", JSON.stringify(data.location));
+        formData.append("Location.Latitude", data.location.latitude.toString());
+        formData.append(
+          "Location.Longitude",
+          data.location.longitude.toString()
+        );
       }
 
       // Files
@@ -61,6 +102,8 @@ export function useCreatePet() {
           formData.append("Videos", video);
         });
       }
+
+      console.log("Form data:", formData);
 
       const response = await api.post<PetDto>("api/Pet", formData);
       return response;
@@ -88,9 +131,21 @@ export function useDeletePet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => api.delete(`api/Pet/${id}`),
+    mutationFn: async (id: string) => {
+      try {
+        const response = await api.delete(`api/Pet/${id}`);
+        // No need to check status code since api.delete handles it
+        return response;
+      } catch (error) {
+        console.error("Delete pet error:", error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pets"] });
+    },
+    onError: (error) => {
+      console.error("Delete mutation error:", error);
     },
   });
 }

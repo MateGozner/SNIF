@@ -37,22 +37,43 @@ export function useAddPetVideo(petId: string) {
   });
 }
 
+const extractFileName = (url: string): string => {
+  const matches = url.match(/([^/]+\.[^.]+)$/);
+  return matches ? matches[1] : "";
+};
+
 export function useDeletePetMedia(petId: string) {
   const queryClient = useQueryClient();
 
   return {
     deletePhoto: useMutation({
-      mutationFn: (fileName: string) =>
-        api.delete(`api/Pet/${petId}/photos/${fileName}`),
+      mutationFn: async (photoUrl: string) => {
+        const fileName = extractFileName(photoUrl);
+        if (!fileName) {
+          throw new Error("Invalid photo URL");
+        }
+        return api.delete(`api/Pet/${petId}/photos/${fileName}`);
+      },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["pet", petId] });
       },
+      onError: (error) => {
+        console.error("Failed to delete photo:", error);
+      },
     }),
     deleteVideo: useMutation({
-      mutationFn: (fileName: string) =>
-        api.delete(`api/Pet/${petId}/videos/${fileName}`),
+      mutationFn: async (videoUrl: string) => {
+        const fileName = extractFileName(videoUrl);
+        if (!fileName) {
+          throw new Error("Invalid video URL");
+        }
+        return api.delete(`api/Pet/${petId}/videos/${fileName}`);
+      },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["pet", petId] });
+      },
+      onError: (error) => {
+        console.error("Failed to delete video:", error);
       },
     }),
   };
