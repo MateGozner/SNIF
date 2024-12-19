@@ -21,12 +21,12 @@ const purposeLabels: Record<
     label: "Breeding",
     icon: <Heart className="w-4 h-4" />,
   },
-  [PetPurpose.PlayDate]: {
-    label: "Play Date",
+  [PetPurpose.Friendship]: {
+    label: "Friendship",
     icon: <PawPrint className="w-4 h-4" />,
   },
-  [PetPurpose.Both]: {
-    label: "Breeding & Play Dates",
+  [PetPurpose.Playdate]: {
+    label: "Playdate",
     icon: <Heart className="w-4 h-4" />,
   },
 };

@@ -1,74 +1,60 @@
 "use client";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import EmptyState from "../matches/EmptyState";
 
-let interval: any;
+interface CardStackProps {
+  cards: React.ReactNode[];
+  onSwipe: (direction: "left" | "right", index: number) => void;
+}
 
-type Card = {
-  id: number;
-  name: string;
-  designation: string;
-  content: React.ReactNode;
-};
+export function CardStack({ cards, onSwipe }: CardStackProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(
+    null
+  );
 
-export const CardStack = ({
-  items,
-  offset,
-  scaleFactor,
-}: {
-  items: Card[];
-  offset?: number;
-  scaleFactor?: number;
-}) => {
-  const CARD_OFFSET = offset || 10;
-  const SCALE_FACTOR = scaleFactor || 0.06;
-  const [cards, setCards] = useState<Card[]>(items);
-
-  useEffect(() => {
-    startFlipping();
-
-    return () => clearInterval(interval);
-  }, []);
-  const startFlipping = () => {
-    interval = setInterval(() => {
-      setCards((prevCards: Card[]) => {
-        const newArray = [...prevCards]; // create a copy of the array
-        newArray.unshift(newArray.pop()!); // move the last element to the front
-        return newArray;
-      });
-    }, 5000);
+  const handleDragEnd = (info: PanInfo) => {
+    const threshold = 100;
+    if (Math.abs(info.offset.x) > threshold) {
+      const direction = info.offset.x > 0 ? "right" : "left";
+      setExitDirection(direction);
+      onSwipe(direction, currentIndex);
+      setTimeout(() => {
+        setCurrentIndex((prev) => prev + 1);
+        setExitDirection(null);
+      }, 200);
+    }
   };
 
   return (
-    <div className="relative  h-60 w-60 md:h-60 md:w-96">
-      {cards.map((card, index) => {
-        return (
+    <div className="relative h-[600px]">
+      <AnimatePresence mode="popLayout">
+        {currentIndex < cards.length ? (
           <motion.div
-            key={card.id}
-            className="absolute dark:bg-black bg-white h-60 w-60 md:h-60 md:w-96 rounded-3xl p-4 shadow-xl border border-neutral-200 dark:border-white/[0.1]  shadow-black/[0.1] dark:shadow-white/[0.05] flex flex-col justify-between"
-            style={{
-              transformOrigin: "top center",
-            }}
+            key={currentIndex}
+            className="absolute w-full"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            onDragEnd={(_, info) => handleDragEnd(info)}
             animate={{
-              top: index * -CARD_OFFSET,
-              scale: 1 - index * SCALE_FACTOR, // decrease scale for cards that are behind
-              zIndex: cards.length - index, //  decrease z-index for the cards that are behind
+              scale: 1,
+              rotate: 0,
+              opacity: 1,
             }}
+            exit={{
+              x: exitDirection === "left" ? -300 : 300,
+              opacity: 0,
+              rotate: exitDirection === "left" ? -20 : 20,
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
-            <div className="font-normal text-neutral-700 dark:text-neutral-200">
-              {card.content}
-            </div>
-            <div>
-              <p className="text-neutral-500 font-medium dark:text-white">
-                {card.name}
-              </p>
-              <p className="text-neutral-400 font-normal dark:text-neutral-200">
-                {card.designation}
-              </p>
-            </div>
+            {cards[currentIndex]}
           </motion.div>
-        );
-      })}
+        ) : (
+          <EmptyState />
+        )}
+      </AnimatePresence>
     </div>
   );
-};
+}

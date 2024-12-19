@@ -8,8 +8,8 @@ export enum Gender {
 
 export enum PetPurpose {
   Breeding = 0,
-  PlayDate = 1,
-  Both = 2,
+  Friendship = 1,
+  Playdate = 2,
 }
 
 export interface MedicalHistoryDto {

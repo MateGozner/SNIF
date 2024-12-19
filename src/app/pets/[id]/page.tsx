@@ -33,12 +33,22 @@ export default function PetDetailPage() {
     router.push(`/pets/${pet.id}/edit`);
   };
 
+  const handleMatch = () => {
+    router.push(`/pets/${pet.id}/matches`);
+  };
+
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-black/95 to-black/98">
       {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]" />
       <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:3rem_3rem]" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-background/20 backdrop-blur-3xl" />
-
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-background/90 to-background/20 backdrop-blur-3xl"
+        style={{
+          maskImage: "linear-gradient(to bottom, transparent, black)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent, black)",
+        }}
+      />
       {/* Main Content */}
       <ScrollArea className="relative h-screen">
         <motion.div
@@ -49,11 +59,32 @@ export default function PetDetailPage() {
         >
           {/* Hero Section */}
           <div className="relative w-full overflow-hidden">
-            <div className="w-full max-w-[2000px] mx-auto">
+            <motion.div
+              className="absolute inset-0 z-0"
+              initial={{ scale: 1.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                duration: 1.2,
+                ease: [0.23, 1, 0.32, 1],
+                staggerChildren: 0.1,
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            </motion.div>
+
+            <div className="w-full max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
               <motion.div
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.8,
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 20,
+                }}
+                className="rounded-[2rem] overflow-hidden backdrop-blur-xl 
+                          border border-white/10 shadow-2xl 
+                          shadow-black/20"
               >
                 <PetGallery
                   photos={pet.photos}
@@ -100,7 +131,7 @@ export default function PetDetailPage() {
                     onEdit={handleEdit}
                     onDelete={() => setShowDeleteDialog(true)}
                     onMessage={() => {}}
-                    onShare={() => {}}
+                    onMatch={handleMatch}
                   />
                 </motion.div>
 
