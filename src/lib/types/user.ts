@@ -26,6 +26,8 @@ export interface UserDto {
   createdAt: string;
   updatedAt?: string;
   profilePicturePath?: string;
+  isOnline?: boolean;
+  lastSeen?: string;
 }
 
 export interface UpdateUserPersonalInfoDto {

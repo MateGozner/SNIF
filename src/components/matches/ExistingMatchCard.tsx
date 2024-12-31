@@ -8,6 +8,8 @@ import { PetGallery } from "@/components/pets/detail/PetGallery";
 import { Check, X, Clock, Calendar, Heart } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useProfile } from "@/hooks/profile/useProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 interface ExistingMatchCardProps {
   match: MatchDto;
@@ -23,6 +25,8 @@ export function ExistingMatchCard({
     match.initiatorPet.id === currentPetId
       ? match.targetPet
       : match.initiatorPet;
+
+  const { data: owner } = useProfile(targetPet.ownerId);
 
   const statusConfig = {
     [MatchStatus.Pending]: {
@@ -102,6 +106,49 @@ export function ExistingMatchCard({
               </span>
             )}
           </div>
+
+          {owner && (
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Avatar className="h-8 w-8 ring-1 ring-white/10">
+                  <AvatarImage
+                    src={owner.profilePicturePath || ""}
+                    alt={owner.name}
+                  />
+                  <AvatarFallback className="bg-white/5 text-white/80 text-xs">
+                    {owner.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div
+                  className={cn(
+                    "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full",
+                    "ring-[1.5px] ring-black",
+                    owner.isOnline ? "bg-green-400" : "bg-gray-400/50"
+                  )}
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-white/90">
+                  {owner.name}
+                </span>
+                <span className="text-xs text-white/50">
+                  {owner.isOnline
+                    ? "Online"
+                    : owner.lastSeen
+                    ? `Last seen ${formatDistanceToNow(
+                        new Date(owner.lastSeen),
+                        {
+                          addSuffix: true,
+                        }
+                      )}`
+                    : "Offline"}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 text-white/80">
             <Heart className="h-4 w-4 text-[#2997FF]" />

@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Sidebar } from "@/components/sidebar/SideBar";
 import { Toaster } from "sonner";
 import { SignalRProvider } from "@/contexts/signalR/SignalRContext";
+import { OnlineStatusProvider } from "@/contexts/signalR/OnlineContext";
 
 const queryClient = new QueryClient();
 
@@ -37,17 +38,19 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <SignalRProvider>
-              <div className="flex min-h-screen">
-                <Sidebar />
-                <main className="flex-1 md:pl-64">{children}</main>
-              </div>
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  className: "bg-transparent border-0 p-0 w-auto",
-                  duration: 5000,
-                }}
-              />
+              <OnlineStatusProvider>
+                <div className="flex min-h-screen">
+                  <Sidebar />
+                  <main className="flex-1 md:pl-64">{children}</main>
+                </div>
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    className: "bg-transparent border-0 p-0 w-auto",
+                    duration: 5000,
+                  }}
+                />
+              </OnlineStatusProvider>
             </SignalRProvider>
           </AuthProvider>
         </QueryClientProvider>
