@@ -10,6 +10,7 @@ import { Sidebar } from "@/components/sidebar/SideBar";
 import { Toaster } from "sonner";
 import { SignalRProvider } from "@/contexts/signalR/SignalRContext";
 import { OnlineStatusProvider } from "@/contexts/signalR/OnlineContext";
+import { MatchNotification } from "@/components/matches/MatchNotification";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ export default function RootLayout({
           <AuthProvider>
             <SignalRProvider>
               <OnlineStatusProvider>
+                <MatchNotification />
                 <div className="flex min-h-screen">
                   <Sidebar />
                   <main className="flex-1 md:pl-64">{children}</main>
