@@ -5,11 +5,12 @@ import { useUpdateMatchStatus } from "@/hooks/matches/useMatches";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PetGallery } from "@/components/pets/detail/PetGallery";
-import { Check, X, Clock, Calendar, Heart } from "lucide-react";
+import { Check, X, Clock, Calendar, Heart, Video } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/profile/useProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useRouter } from "next/navigation";
 
 interface ExistingMatchCardProps {
   match: MatchDto;
@@ -20,6 +21,7 @@ export function ExistingMatchCard({
   match,
   currentPetId,
 }: ExistingMatchCardProps) {
+  const router = useRouter();
   const updateStatus = useUpdateMatchStatus(match.id);
   const targetPet =
     match.initiatorPet.id === currentPetId
@@ -60,6 +62,10 @@ export function ExistingMatchCard({
   };
 
   const currentStatus = statusConfig[match.status];
+
+  const handleStartCall = () => {
+    router.push(`/matches/${match.id}/call?receiverId=${targetPet.ownerId}`);
+  };
 
   return (
     <motion.div
@@ -180,6 +186,18 @@ export function ExistingMatchCard({
               </Button>
             </CardFooter>
           )}
+
+        {match.status === MatchStatus.Accepted && (
+          <CardFooter className="p-6 pt-0 flex gap-3">
+            <Button
+              onClick={handleStartCall}
+              className="flex-1 gap-2 bg-[#2997FF] hover:bg-[#147CE5]"
+            >
+              <Video className="h-4 w-4" />
+              Video Call
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </motion.div>
   );
