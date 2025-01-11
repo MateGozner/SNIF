@@ -24,10 +24,11 @@ export function useVideoHub() {
         console.log("🔄 Initializing SignalR connection...");
         const newConnection = new HubConnectionBuilder()
           .withUrl(`${process.env.NEXT_PUBLIC_API_URL}videoHub`, {
-            accessTokenFactory: () => {
-              console.log("🔒 Token factory called");
-              return token;
+            accessTokenFactory: () => token,
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
+            withCredentials: true,
           })
           .configureLogging(LogLevel.Debug)
           .withAutomaticReconnect({
@@ -81,7 +82,7 @@ export function useVideoHub() {
     await connection.invoke("JoinCall", matchId);
   };
 
-  const sendSignal = async (matchId: string, signal: any, type: string) => {
+  const sendSignal = async (matchId: string, signal: unknown, type: string) => {
     if (!connection) throw new Error("No connection");
     try {
       console.log("📡 Sending signal:", type);

@@ -218,6 +218,9 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({ children }) => {
       if (currentMatchId.current === matchId) {
         endCurrentCall();
         toast.info("Call ended");
+        if (window.location.pathname.includes(`/matches/${matchId}/call`)) {
+          window.history.back();
+        }
       }
     };
 
