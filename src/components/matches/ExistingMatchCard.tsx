@@ -5,7 +5,7 @@ import { useUpdateMatchStatus } from "@/hooks/matches/useMatches";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PetGallery } from "@/components/pets/detail/PetGallery";
-import { Check, X, Clock, Calendar, Heart, Video } from "lucide-react";
+import { Check, X, Clock, Calendar, Heart, Video, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/profile/useProfile";
@@ -195,6 +195,13 @@ export function ExistingMatchCard({
             >
               <Video className="h-4 w-4" />
               Video Call
+            </Button>
+            <Button
+              onClick={() => router.push(`/matches/${match.id}/messages`)}
+              className="flex-1 gap-2 bg-emerald-500 hover:bg-emerald-600"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chat
             </Button>
           </CardFooter>
         )}

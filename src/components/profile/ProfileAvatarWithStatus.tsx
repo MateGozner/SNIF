@@ -8,7 +8,9 @@ interface ProfileAvatarWithStatusProps {
   isOnline?: boolean;
   lastOnline?: string;
   onFileSelect?: (file: File) => void;
+  isOnFileSelect?: boolean;
   showStatus?: boolean;
+  size?: "sm" | "md" | "lg";
 }
 
 export function ProfileAvatarWithStatus({
@@ -17,7 +19,9 @@ export function ProfileAvatarWithStatus({
   isOnline,
   lastOnline,
   onFileSelect,
+  isOnFileSelect = true,
   showStatus = true,
+  size = "md",
 }: ProfileAvatarWithStatusProps) {
   return (
     <div className="flex flex-col items-center gap-2">
@@ -25,6 +29,8 @@ export function ProfileAvatarWithStatus({
         profilePicture={profilePicture}
         name={name}
         onFileSelect={onFileSelect || (() => {})}
+        isOnFileSelect={isOnFileSelect}
+        size={size}
       />
       {showStatus && (
         <OnlineStatus

@@ -2,6 +2,7 @@ import { api } from "@/lib/auth/api";
 import { CreateMatchDto, MatchDto, UpdateMatchDto } from "@/lib/types/match";
 import { PetDto, PetPurpose } from "@/lib/types/pet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export function usePetMatches(petId: string) {
   return useQuery({
@@ -36,7 +37,22 @@ export function usePotentialMatches(petId: string, purpose?: PetPurpose) {
 export function useMatch(matchId: string) {
   return useQuery({
     queryKey: ["match", matchId],
-    queryFn: () => api.get<MatchDto>(`api/match/${matchId}`),
+    queryFn: async () => {
+      console.log(`[useMatch] Fetching match with ID: ${matchId}`);
+
+      try {
+        const response = await api.get<MatchDto>(`api/match/${matchId}`);
+        toast.success("Match loaded");
+        return response;
+      } catch (error) {
+        toast.error("Failed to load match," + error);
+        throw error;
+      }
+    },
+    retry: (failureCount) => {
+      toast.error(`Failed to load match, retrying...`);
+      return failureCount < 3;
+    },
   });
 }
 

@@ -19,19 +19,24 @@ export function OnlineStatus({
   if (isOnline === undefined) return null;
 
   return (
-    <div className={cn("flex items-center gap-2 text-sm", className)}>
+    <div
+      className={cn(
+        "flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5",
+        className
+      )}
+    >
       {showDot && (
         <Circle
-          className={cn("h-2 w-2 fill-current", {
-            "text-green-500": isOnline,
-            "text-gray-400": !isOnline,
+          className={cn("h-1.5 w-1.5 fill-current", {
+            "text-green-400": isOnline,
+            "text-zinc-400": !isOnline,
           })}
         />
       )}
       <span
-        className={cn("text-sm", {
-          "text-green-500": isOnline,
-          "text-gray-400": !isOnline,
+        className={cn("text-xs font-medium", {
+          "text-green-400": isOnline,
+          "text-zinc-400": !isOnline,
         })}
       >
         {isOnline

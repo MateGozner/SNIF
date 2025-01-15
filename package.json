@@ -40,6 +40,7 @@
     "date-fns": "^3.6.0",
     "dog-breeds": "^1.0.0",
     "framer-motion": "^11.14.4",
+    "immer": "^10.1.1",
     "jwt-decode": "^4.0.0",
     "jwt-js-decode": "^1.9.0",
     "leaflet": "^1.9.4",
