@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Sidebar } from "@/components/sidebar/SideBar";
 import { Toaster } from "sonner";
 import { SignalRProvider } from "@/contexts/signalR/SignalRContext";
-import { OnlineStatusProvider } from "@/contexts/signalR/OnlineContext";
+import { OnlineProvider } from "@/contexts/signalR/OnlineContext";
 import { MatchNotification } from "@/components/matches/MatchNotification";
 import { VideoProvider } from "@/contexts/signalR/VideoContext";
 import IncomingCallNotification from "@/components/chat/IncomingCallNotification";
@@ -42,7 +42,7 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <SignalRProvider>
-              <OnlineStatusProvider>
+              <OnlineProvider>
                 <MatchNotification />
                 <VideoProvider>
                   <ChatProvider>
@@ -60,7 +60,7 @@ export default function RootLayout({
                     />
                   </ChatProvider>
                 </VideoProvider>
-              </OnlineStatusProvider>
+              </OnlineProvider>
             </SignalRProvider>
           </AuthProvider>
         </QueryClientProvider>

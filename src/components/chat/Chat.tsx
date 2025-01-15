@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Send } from "lucide-react";
+import { Check, Loader2, Send, Video } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useMatchMessages } from "@/hooks/message/useMessage";
@@ -14,6 +14,8 @@ import { ProfileAvatarWithStatus } from "../profile/ProfileAvatarWithStatus";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOnlineStatus } from "@/contexts/signalR/OnlineContext";
 import { MessageDto } from "@/lib/types/message";
+import { MessageStatus } from "./MessageStatus";
+import { useRouter } from "next/navigation";
 
 interface ChatProps {
   matchId: string;
@@ -41,6 +43,7 @@ export function Chat({
   const { data: initialMessages } = useMatchMessages(matchId);
   const { onlineUsers } = useOnlineStatus();
   const isReceiverOnline = onlineUsers.includes(receiverId);
+  const router = useRouter();
 
   const allMessages = useMemo(() => {
     const messageMap = new Map<string, MessageDto>();
@@ -81,7 +84,10 @@ export function Chat({
     if (!allMessages.length) return;
 
     const unreadMessages = allMessages.filter(
-      (msg) => !msg.isRead && msg.receiverId === receiverId
+      (msg) =>
+        !msg.isRead &&
+        msg.receiverId !== receiverId &&
+        msg.senderId === receiverId
     );
 
     unreadMessages.forEach((msg) => {
@@ -106,31 +112,47 @@ export function Chat({
     }
   };
 
+  const handleStartCall = () => {
+    router.push(`/messages/${matchId}/call?receiverId=${receiverId}`);
+  };
+
   return (
     <Card className="h-screen bg-transparent border-0 overflow-hidden">
       <CardHeader className="border-b border-white/[0.05] py-4 px-6">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4"
+          className="flex items-center justify-between"
         >
-          <ProfileAvatarWithStatus
-            profilePicture={receiverAvatar}
-            name={receiverName}
-            isOnline={isReceiverOnline}
-            showStatus={true}
-            onFileSelect={undefined}
-            isOnFileSelect={false}
-            size="sm"
-          />
-          <div className="space-y-1">
-            <h2 className="text-xl font-medium text-white/90">
-              {receiverName}
-            </h2>
-            <p className="text-sm text-white/50">
-              {isReceiverOnline ? "Active Now" : "Offline"}
-            </p>
+          <div className="flex items-center gap-4">
+            {" "}
+            <ProfileAvatarWithStatus
+              profilePicture={receiverAvatar}
+              name={receiverName}
+              isOnline={isReceiverOnline}
+              showStatus={true}
+              onFileSelect={undefined}
+              isOnFileSelect={false}
+              size="sm"
+            />
+            <div className="space-y-1">
+              <h2 className="text-xl font-medium text-white/90">
+                {receiverName}
+              </h2>
+              <p className="text-sm text-white/50">
+                {isReceiverOnline ? "Active Now" : "Offline"}
+              </p>
+            </div>
           </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleStartCall}
+            className="p-2.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] transition-colors duration-200"
+          >
+            <Video className="h-5 w-5 text-[#2997FF]" />
+          </motion.button>
         </motion.div>
       </CardHeader>
 
@@ -157,11 +179,16 @@ export function Chat({
                   )}
                 >
                   <p className="break-words">{msg.content}</p>
-                  <span className="text-xs opacity-60 mt-1 block">
-                    {formatDistanceToNow(new Date(msg.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
+                  <div className="flex items-center gap-1 text-xs opacity-60 mt-1">
+                    <span>
+                      {formatDistanceToNow(new Date(msg.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </span>
+                    {msg.senderId !== receiverId && (
+                      <MessageStatus isRead={msg.isRead} />
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
