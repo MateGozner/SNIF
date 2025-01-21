@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Badge } from "../ui/badge";
+import { Player } from "@lottiefiles/react-lottie-player";
 
 interface ProfileBadgesProps {
   isVerifiedBreeder: boolean;
@@ -30,6 +31,12 @@ export function ProfileBadges({
         className="bg-gradient-to-b from-white/[0.08] to-white/[0.05] text-white/80 
         border border-white/[0.1] backdrop-blur-xl px-4 py-1.5 rounded-full font-medium"
       >
+        <Player
+          autoplay
+          loop
+          src="/animations/verified-badge.json"
+          style={{ height: 20, width: 20 }}
+        />
         Joined {new Date(createdAt).toLocaleDateString()}
       </Badge>
     </motion.div>

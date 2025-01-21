@@ -1,7 +1,15 @@
-"use client";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Plus, Calendar, Phone, Shield, Activity } from "lucide-react";
+import { format } from "date-fns";
+import { healthInfoSchema, HealthInfoForm } from "@/lib/validation/pet-health";
+import { COMMON_HEALTH_ISSUES } from "@/lib/constants/pet-health";
+import { CreatePetDto } from "@/lib/types/pet";
+import { cn } from "@/lib/utils";
+
+// UI Components
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,32 +29,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Plus, Calendar } from "lucide-react";
-import { healthInfoSchema, HealthInfoForm } from "@/lib/validation/pet-health";
-import { COMMON_HEALTH_ISSUES } from "@/lib/constants/pet-health";
-import { useState } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { CreatePetDto } from "@/lib/types/pet";
-import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface HealthInfoProps {
   initialData: Partial<CreatePetDto>;
   onNext: (data: Partial<CreatePetDto>) => void;
   onBack: () => void;
-  classname?: string;
+  className?: string;
 }
 
 export function HealthInfo({
   initialData,
   onNext,
   onBack,
-  classname,
+  className,
 }: HealthInfoProps) {
   const [newCustomIssue, setNewCustomIssue] = useState("");
 
@@ -65,31 +68,79 @@ export function HealthInfo({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((data) => onNext(data))}
-        className={cn("space-y-6", classname)}
+        className={cn("space-y-8", className)}
       >
+        {/* Vaccination Status */}
         <FormField
           control={form.control}
           name="medicalHistory.isVaccinated"
           render={({ field }) => (
-            <FormItem className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <FormLabel className="font-medium">Is Vaccinated</FormLabel>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
+            <FormItem>
+              <Card
+                className={cn(
+                  "p-4 backdrop-blur-sm border-white/10",
+                  "bg-white/5 hover:bg-white/[0.07] transition-colors",
+                  field.value && "bg-emerald-500/10 hover:bg-emerald-500/[0.15]"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        "p-2 rounded-full",
+                        field.value ? "bg-emerald-500/20" : "bg-white/10"
+                      )}
+                    >
+                      <Shield
+                        className={cn(
+                          "h-5 w-5",
+                          field.value ? "text-emerald-400" : "text-white/60"
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <FormLabel className="text-base text-white">
+                        Vaccination Status
+                      </FormLabel>
+                      <p
+                        className={cn(
+                          "text-sm",
+                          field.value ? "text-emerald-400" : "text-white/60"
+                        )}
+                      >
+                        {field.value ? "Vaccinated" : "Not vaccinated"}
+                      </p>
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-emerald-500"
+                    />
+                  </FormControl>
+                </div>
+              </Card>
             </FormItem>
           )}
         />
 
+        {/* Health Issues */}
         <FormField
           control={form.control}
           name="medicalHistory.healthIssues"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Health Issues</FormLabel>
-              <FormControl>
+            <FormItem className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-red-500/20">
+                  <Activity className="h-5 w-5 text-red-400" />
+                </div>
+                <FormLabel className="text-base text-white">
+                  Health Issues
+                </FormLabel>
+              </div>
+
+              <Card className="p-4 bg-white/5 border-white/10 backdrop-blur-sm">
                 <div className="space-y-4">
                   <Select
                     onValueChange={(value) => {
@@ -99,9 +150,11 @@ export function HealthInfo({
                       }
                     }}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select health issue" />
-                    </SelectTrigger>
+                    <FormControl>
+                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                        <SelectValue placeholder="Select health issue" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       {COMMON_HEALTH_ISSUES.map((issue) => (
                         <SelectItem key={issue} value={issue}>
@@ -111,34 +164,43 @@ export function HealthInfo({
                     </SelectContent>
                   </Select>
 
-                  <div className="flex flex-wrap gap-2">
-                    {field.value?.map((issue, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="bg-red-50 text-red-500"
-                      >
-                        {issue}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            field.onChange(
-                              field.value?.filter((_, i) => i !== index)
-                            );
-                          }}
-                          className="ml-2 hover:text-red-700"
+                  <AnimatePresence>
+                    <div className="flex flex-wrap gap-2">
+                      {field.value?.map((issue, index) => (
+                        <motion.div
+                          key={issue}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
                         >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
+                          <Badge
+                            variant="secondary"
+                            className="bg-red-500/20 text-red-300 border-red-500/30 px-3 py-1"
+                          >
+                            {issue}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                field.onChange(
+                                  field.value?.filter((_, i) => i !== index)
+                                );
+                              }}
+                              className="ml-2 hover:text-red-200 transition-colors"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </AnimatePresence>
 
                   <div className="flex gap-2">
                     <Input
                       value={newCustomIssue}
                       onChange={(e) => setNewCustomIssue(e.target.value)}
                       placeholder="Add custom health issue"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
                       onKeyPress={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
@@ -165,31 +227,46 @@ export function HealthInfo({
                           setNewCustomIssue("");
                         }
                       }}
+                      className="border-white/10 text-white/60 hover:text-white hover:bg-white/5"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </FormControl>
+              </Card>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        <Separator className="bg-white/10" />
+
+        {/* Last Checkup */}
         <FormField
           control={form.control}
           name="medicalHistory.lastCheckup"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Last Checkup</FormLabel>
+            <FormItem>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-full bg-blue-500/20">
+                  <Calendar className="h-5 w-5 text-blue-400" />
+                </div>
+                <FormLabel className="text-base text-white">
+                  Last Checkup
+                </FormLabel>
+              </div>
+
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
-                      variant={"outline"}
-                      className={`w-full pl-3 text-left font-normal ${
-                        !field.value && "text-muted-foreground"
-                      }`}
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        "bg-white/5 border-white/10 text-white",
+                        "hover:bg-white/10 hover:border-white/20",
+                        !field.value && "text-white/40"
+                      )}
                     >
                       {field.value ? (
                         format(new Date(field.value), "PPP")
@@ -215,16 +292,25 @@ export function HealthInfo({
           )}
         />
 
+        {/* Vet Contact */}
         <FormField
           control={form.control}
           name="medicalHistory.vetContact"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Veterinarian Contact</FormLabel>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-full bg-purple-500/20">
+                  <Phone className="h-5 w-5 text-purple-400" />
+                </div>
+                <FormLabel className="text-base text-white">
+                  Veterinarian Contact
+                </FormLabel>
+              </div>
               <FormControl>
                 <Input
                   {...field}
                   placeholder="Enter veterinarian contact info"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
                 />
               </FormControl>
               <FormMessage />
@@ -233,10 +319,18 @@ export function HealthInfo({
         />
 
         <div className="pt-6 flex justify-between">
-          <Button type="button" variant="outline" onClick={onBack}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBack}
+            className="border-white/10 text-white/60 hover:text-white hover:bg-white/5"
+          >
             Back
           </Button>
-          <Button type="submit" className="bg-[#2997FF] hover:bg-[#147CE5]">
+          <Button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-600 text-white min-w-[100px]"
+          >
             Continue
           </Button>
         </div>

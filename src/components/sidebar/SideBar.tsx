@@ -4,14 +4,15 @@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/contexts/auth/AuthContext";
+
 import { Menu } from "lucide-react";
 import { AuthenticatedContent } from "./AuthenticatedContent";
 import { UnauthenticatedContent } from "./UnauthenticatedContent";
+import { useAuthStore } from "@/lib/store/authStore";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, removeAuth: logout, isAuthenticated } = useAuthStore();
 
   const content =
     isAuthenticated && user ? (

@@ -1,11 +1,13 @@
-// src/components/pets/detail/PetInfo.tsx
 import { LocationDto } from "@/lib/types/location";
 import { PetPurpose } from "@/lib/types/pet";
 import { MapPin, PawPrint, Target, Heart } from "lucide-react";
-import { motion } from "framer-motion";
 import { LocationMap } from "@/components/map/LocationMap";
-import { Card } from "@/components/ui/card";
+
+// Import shadcn components
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 export interface PetInfoProps {
   personality: string[];
@@ -36,106 +38,81 @@ export function PetInfo({ personality, purpose, location }: PetInfoProps) {
     <ScrollArea className="h-full">
       <div className="space-y-6 p-6">
         {/* Personality Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.05]"
-        >
-          <Card className="p-6 bg-transparent border-none">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-xl">
-                <PawPrint className="h-5 w-5 text-white" />
+        <Card className="overflow-hidden bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-xl border-0 shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40">
+                <PawPrint className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <h2 className="text-2xl font-medium text-white tracking-tight">
-                Personality
-              </h2>
+              <CardTitle className="text-xl font-medium">Personality</CardTitle>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {personality.map((trait) => (
-                <motion.div
+                <Badge
                   key={trait}
-                  whileHover={{ scale: 1.02 }}
-                  className="relative overflow-hidden rounded-2xl p-4 bg-white/[0.03] border border-white/[0.05]"
+                  variant="secondary"
+                  className="px-4 py-2 text-sm justify-center hover:bg-gray-200/80 dark:hover:bg-gray-800/80 transition-colors"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 hover:opacity-100" />
-                  <span className="relative text-base font-medium text-white/90">
-                    {trait}
-                  </span>
-                </motion.div>
+                  {trait}
+                </Badge>
               ))}
             </div>
-          </Card>
-        </motion.div>
+          </CardContent>
+        </Card>
 
         {/* Purpose Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-3xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.05]"
-        >
-          <Card className="p-6 bg-transparent border-none">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-pink-500/20 to-rose-500/20 backdrop-blur-xl">
-                <Target className="h-5 w-5 text-white" />
+        <Card className="overflow-hidden bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-xl border-0 shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-900/40">
+                <Target className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <h2 className="text-2xl font-medium text-white tracking-tight">
-                Looking For
-              </h2>
+              <CardTitle className="text-xl font-medium">Looking For</CardTitle>
             </div>
-
-            <div className="flex flex-wrap gap-3">
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
               {purpose.map((p) => (
-                <motion.div
+                <div
                   key={p}
-                  whileHover={{ scale: 1.02 }}
-                  className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.05]"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl 
+                           bg-purple-50 dark:bg-purple-900/20 
+                           text-purple-700 dark:text-purple-300"
                 >
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/20">
-                    {purposeLabels[p].icon}
-                  </div>
-                  <span className="text-white/90">
+                  {purposeLabels[p].icon}
+                  <span className="text-sm font-medium">
                     {purposeLabels[p].label}
                   </span>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </Card>
-        </motion.div>
+          </CardContent>
+        </Card>
 
         {/* Location Section */}
         {location && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="rounded-3xl overflow-hidden bg-white/[0.02] backdrop-blur-xl border border-white/[0.05]"
-          >
-            <Card className="bg-transparent border-none">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-xl">
-                    <MapPin className="h-5 w-5 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-medium text-white tracking-tight">
-                    Location
-                  </h2>
+          <Card className="overflow-hidden bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-xl border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-green-100 dark:bg-green-900/40">
+                  <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
+                <CardTitle className="text-xl font-medium">Location</CardTitle>
               </div>
-
-              <div className="relative">
-                <LocationMap location={location} />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <p className="text-xl font-medium text-white mb-1">
-                    {location.city}
-                  </p>
-                  <p className="text-sm text-white/60">{location.country}</p>
-                </div>
+            </CardHeader>
+            <Separator />
+            <div className="relative h-64">
+              <LocationMap location={location} />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                <p className="text-lg font-medium text-white">
+                  {location.city}
+                </p>
+                <p className="text-sm text-white/80">{location.country}</p>
               </div>
-            </Card>
-          </motion.div>
+            </div>
+          </Card>
         )}
       </div>
     </ScrollArea>

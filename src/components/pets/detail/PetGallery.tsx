@@ -1,176 +1,269 @@
-// src/components/pets/detail/PetGallery.tsx
 import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Image as ImageIcon,
-  Film,
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  ImagePlus,
+  Film,
+  ImageIcon,
 } from "lucide-react";
 import { getImageUrl } from "@/lib/utils/urlTransformer";
+
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BackgroundGradient } from "@/components/ui/background-gradient";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MediaUploadModal } from "./MediaUploadModal";
+import { cn } from "@/lib/utils";
 
 interface PetGalleryProps {
   photos: string[];
   videos?: string[];
   name: string;
   petId: string;
+  showAddMedia?: boolean;
+  className?: string;
+  aspectRatio?: "video" | "square" | "wide";
+  variant?: "default" | "minimal";
 }
 
-type MediaType = "photos" | "videos";
-
-export function PetGallery({ photos, videos, name, petId }: PetGalleryProps) {
-  const [mediaType, setMediaType] = useState<MediaType>("photos");
+export function PetGallery({
+  photos,
+  videos = [],
+  name,
+  petId,
+  showAddMedia = true,
+  className,
+  aspectRatio = "video",
+  variant = "default",
+}: PetGalleryProps) {
+  const [activeType, setActiveType] = useState<"photos" | "videos">("photos");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState<"left" | "right" | null>(null);
 
-  if (!photos?.length && !videos?.length) {
+  const mediaItems = activeType === "photos" ? photos : videos;
+  const hasPhotos = photos.length > 0;
+  const hasVideos = videos.length > 0;
+
+  const aspectRatioClasses = {
+    video: "aspect-video",
+    square: "aspect-square",
+    wide: "aspect-[2/1]",
+  };
+
+  // Empty state
+  if (!hasPhotos && !hasVideos) {
     return (
-      <BackgroundGradient className="rounded-3xl overflow-hidden">
-        <div className="relative aspect-[4/3] w-full flex items-center justify-center bg-black/40 backdrop-blur-xl">
-          <div className="absolute top-4 right-4 z-20">
-            <MediaUploadModal petId={petId} />
-          </div>
-          <Alert className="w-[80%] bg-white/[0.03] border-white/[0.05]">
-            <AlertCircle className="h-5 w-5 text-white/60" />
-            <AlertDescription className="text-white/80">
-              No media available for {name}
-            </AlertDescription>
+      <Card
+        className={cn(
+          "bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-0",
+          className
+        )}
+      >
+        <CardContent className="flex items-center justify-center min-h-[300px]">
+          <Alert className="max-w-md bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>No media available for {name}</AlertDescription>
           </Alert>
-        </div>
-      </BackgroundGradient>
+        </CardContent>
+      </Card>
     );
   }
 
-  const hasVideos = videos && videos.length > 0;
-  const currentMedia = mediaType === "photos" ? photos : videos;
-
-  const handleSwipe = (newDirection: "left" | "right") => {
-    if (!currentMedia?.length) return;
-    setDirection(newDirection);
-    const newIndex =
-      newDirection === "right"
-        ? (currentIndex + 1) % currentMedia.length
-        : (currentIndex - 1 + currentMedia.length) % currentMedia.length;
-
-    setTimeout(() => {
-      setCurrentIndex(newIndex);
-      setDirection(null);
-    }, 300);
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % mediaItems.length);
   };
 
-  const handleMediaTypeChange = (newType: MediaType) => {
-    setMediaType(newType);
-    setCurrentIndex(0);
+  const handlePrev = () => {
+    setCurrentIndex(
+      (prev) => (prev - 1 + mediaItems.length) % mediaItems.length
+    );
   };
 
   return (
-    <BackgroundGradient className="rounded-3xl overflow-hidden">
-      <div className="relative aspect-[4/3] w-full">
-        {/* Media Type Selector */}
-        {hasVideos && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
-            <Tabs
-              value={mediaType}
-              onValueChange={(v) => handleMediaTypeChange(v as MediaType)}
-              className="bg-black/20 backdrop-blur-lg rounded-full p-1 z-20"
+    <Card
+      className={cn(
+        "bg-transparent border-0",
+        variant === "minimal" && "shadow-none",
+        className
+      )}
+    >
+      <CardContent className="p-0">
+        <div
+          className={cn(
+            "relative w-full overflow-hidden rounded-lg",
+            aspectRatioClasses[aspectRatio]
+          )}
+        >
+          {/* Media Display */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${activeType}-${currentIndex}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0"
             >
-              <TabsList className="bg-transparent border-none">
-                <TabsTrigger
-                  value="photos"
-                  className="data-[state=active]:bg-white/20 text-white"
-                >
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Photos ({photos.length})
-                </TabsTrigger>
-                <TabsTrigger
-                  value="videos"
-                  className="data-[state=active]:bg-white/20 text-white"
-                >
-                  <Film className="w-4 h-4 mr-2" />
-                  Videos ({videos.length})
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+              {activeType === "photos" ? (
+                <Image
+                  src={getImageUrl(photos[currentIndex])}
+                  alt={`${name}'s photo ${currentIndex + 1}`}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                />
+              ) : (
+                <video
+                  key={videos[currentIndex]}
+                  src={getImageUrl(videos[currentIndex])}
+                  className="h-full w-full object-cover"
+                  controls
+                  playsInline
+                  autoPlay
+                  loop
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Controls Overlay */}
+          <div className="absolute inset-0 flex opacity-0 hover:opacity-100 transition-all duration-300">
+            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 pointer-events-auto">
+              {/* Navigation Controls */}
+              {mediaItems.length > 1 && (
+                <>
+                  <div className="absolute inset-y-0 left-4 flex items-center">
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={handlePrev}
+                      className="h-10 w-10 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                  </div>
+
+                  <div className="absolute inset-y-0 right-4 flex items-center">
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={handleNext}
+                      className="h-10 w-10 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* Media Type Toggle */}
+              {hasPhotos && hasVideos && variant === "default" && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  <div className="flex bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-full p-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setActiveType("photos")}
+                      className={cn(
+                        "rounded-full px-3",
+                        activeType === "photos" &&
+                          "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
+                      )}
+                    >
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      Photos
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setActiveType("videos")}
+                      className={cn(
+                        "rounded-full px-3",
+                        activeType === "videos" &&
+                          "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
+                      )}
+                    >
+                      <Film className="h-4 w-4 mr-2" />
+                      Videos
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Add Media Button */}
+              {showAddMedia && variant === "default" && (
+                <div className="absolute top-4 right-4">
+                  <MediaUploadModal petId={petId} actualPhotos={photos} actualVideos={videos}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800"
+                    >
+                      <ImagePlus className="h-4 w-4 mr-2" />
+                      Add Media
+                    </Button>
+                  </MediaUploadModal>
+                </div>
+              )}
+
+              {/* Progress Indicators */}
+              {mediaItems.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                  {mediaItems.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentIndex(index)}
+                      className={cn(
+                        "h-1.5 rounded-full transition-all duration-300",
+                        index === currentIndex
+                          ? "w-6 bg-white"
+                          : "w-1.5 bg-white/50 hover:bg-white/75"
+                      )}
+                      aria-label={`Go to ${activeType} ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Thumbnails (only shown in default variant) */}
+        {variant === "default" && (
+          <div className="grid grid-cols-6 gap-2 p-4">
+            {mediaItems.slice(0, 6).map((item, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={cn(
+                  "relative aspect-square rounded-lg overflow-hidden",
+                  "ring-offset-2 transition-all duration-200",
+                  currentIndex === index
+                    ? "ring-2 ring-blue-500 dark:ring-blue-400"
+                    : "opacity-70 hover:opacity-100"
+                )}
+              >
+                {activeType === "photos" ? (
+                  <Image
+                    src={getImageUrl(item)}
+                    alt={`Thumbnail ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 16vw, 8vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                    <Film className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                  </div>
+                )}
+              </button>
+            ))}
           </div>
         )}
-        <div className="absolute top-4 right-4 z-20">
-          <MediaUploadModal petId={petId} actualPhotos={photos} actualVideos={videos} />
-        </div>
-        {/* Media Viewer */}
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${mediaType}-${currentIndex}`}
-            initial={{ opacity: 0, x: direction === "right" ? -100 : 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: direction === "right" ? 100 : -100 }}
-            transition={{ type: "spring", damping: 20 }}
-            className="absolute inset-0"
-          >
-            {mediaType === "photos" ? (
-              <Image
-                src={getImageUrl(photos[currentIndex])}
-                alt={`${name}'s photo ${currentIndex + 1}`}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-              />
-            ) : (
-              <video
-                src={getImageUrl(videos?.[currentIndex] ?? "")}
-                className="absolute inset-0 w-full h-full object-cover"
-                controls
-                playsInline
-                controlsList="nodownload" // Prevent download
-                style={{ zIndex: 20 }} // Ensure controls are clickable
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60" />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Navigation Controls */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 z-20">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl hover:bg-white/30 border border-white/30 transition-all"
-            onClick={() => handleSwipe("left")}
-          >
-            <ChevronLeft className="w-8 h-8 text-white" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl hover:bg-white/30 border border-white/30 transition-all"
-            onClick={() => handleSwipe("right")}
-          >
-            <ChevronRight className="w-8 h-8 text-white" />
-          </Button>
-        </div>
-
-        {/* Media Counter */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-          {currentMedia.map((_, index) => (
-            <motion.button
-              key={index}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? "bg-white" : "bg-white/40"
-              }`}
-              whileHover={{ scale: 1.2 }}
-              onClick={() => setCurrentIndex(index)}
-            />
-          ))}
-        </div>
-      </div>
-    </BackgroundGradient>
+      </CardContent>
+    </Card>
   );
 }

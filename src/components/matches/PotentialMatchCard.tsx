@@ -42,6 +42,10 @@ export function PotentialMatchCard({
             videos={pet.videos}
             name={pet.name}
             petId={pet.id}
+            showAddMedia={false}
+            variant="minimal"
+            aspectRatio="wide"
+            className="bg-transparent"
           />
 
           {/* Info Overlay */}
