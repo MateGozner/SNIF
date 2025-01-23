@@ -3,6 +3,7 @@ import { useAuthStore } from "@/lib/store/authStore";
 import { AuthResponse, LoginData, User } from "@/lib/types/auth";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function useLogin() {
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -19,6 +20,7 @@ export function useLogin() {
         location: response.location,
       };
       setAuth(response.token, user);
+      toast.success("Logged in successfully");
       router.push("/");
       return response;
     },
@@ -32,6 +34,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: async () => {
       await api.post("api/User/logout", {});
+      toast.success("Logged out successfully");
       removeAuth();
       router.push("/login");
     },

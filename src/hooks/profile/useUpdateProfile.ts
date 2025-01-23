@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/auth/api";
 import { UpdateUserPersonalInfoDto, UserDto } from "@/lib/types/user";
+import { toast } from "sonner";
 
 export function useUpdateProfile(userId: string) {
   const queryClient = useQueryClient();
@@ -24,6 +25,7 @@ export function useUpdateProfile(userId: string) {
       return response;
     },
     onSuccess: () => {
+      toast.success("Profile updated successfully");
       queryClient.invalidateQueries({ queryKey: ["profile", userId] });
     },
   });

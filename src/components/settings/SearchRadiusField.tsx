@@ -20,17 +20,24 @@ export function SearchRadiusField({ control }: SearchRadiusFieldProps) {
       name="searchRadius"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Search Radius (km)</FormLabel>
+          <FormLabel className="text-white/80 font-medium">
+            Search Radius
+          </FormLabel>
           <FormControl>
-            <Slider
-              min={1}
-              max={500}
-              step={1}
-              value={[field.value]}
-              onValueChange={([value]) => field.onChange(value)}
-            />
+            <div className="pt-2">
+              <Slider
+                min={1}
+                max={500}
+                step={1}
+                value={[field.value]}
+                onValueChange={([value]) => field.onChange(value)}
+                className="[&_[role=slider]]:bg-[#38bdf8] [&_[role=slider]]:border-none [&_[role=slider]]:shadow-lg"
+              />
+            </div>
           </FormControl>
-          <FormDescription>Current radius: {field.value}km</FormDescription>
+          <FormDescription className="text-white/40 text-sm mt-2">
+            Current radius: {field.value}km
+          </FormDescription>
         </FormItem>
       )}
     />

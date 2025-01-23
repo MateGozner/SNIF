@@ -32,7 +32,7 @@ export function AuthenticatedContent({
       <div className="flex-1 space-y-1 p-4">
         <div className="mb-8 space-y-4">
           <Link
-            href={`/profile/${user.id}`}
+            href={`/profile`}
             className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-accent"
           >
             <Avatar className="h-10 w-10 border border-border">

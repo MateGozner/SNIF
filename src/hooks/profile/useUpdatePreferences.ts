@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/auth/api";
 import { UpdatePreferencesDto, UserDto } from "@/lib/types/user";
+import { toast } from "sonner";
 
 export function useUpdatePreferences(userId: string) {
   const queryClient = useQueryClient();
@@ -14,6 +15,7 @@ export function useUpdatePreferences(userId: string) {
       return response;
     },
     onSuccess: () => {
+      toast.success("Preferences updated successfully");
       queryClient.invalidateQueries({ queryKey: ["profile", userId] });
     },
   });

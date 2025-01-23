@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/auth/api";
+import { toast } from "sonner";
 
 export function useAddPetPhoto(petId: string) {
   const queryClient = useQueryClient();
@@ -14,6 +15,7 @@ export function useAddPetPhoto(petId: string) {
       );
     },
     onSuccess: () => {
+      toast.success("Photo uploaded successfully");
       queryClient.invalidateQueries({ queryKey: ["pet", petId] });
     },
   });
@@ -32,6 +34,7 @@ export function useAddPetVideo(petId: string) {
       );
     },
     onSuccess: () => {
+      toast.success("Video uploaded successfully");
       queryClient.invalidateQueries({ queryKey: ["pet", petId] });
     },
   });
@@ -55,9 +58,11 @@ export function useDeletePetMedia(petId: string) {
         return api.delete(`api/Pet/${petId}/photos/${fileName}`);
       },
       onSuccess: () => {
+        toast.success("Photo deleted successfully");
         queryClient.invalidateQueries({ queryKey: ["pet", petId] });
       },
       onError: (error) => {
+        toast.error("Failed to delete photo");
         console.error("Failed to delete photo:", error);
       },
     }),
@@ -70,9 +75,11 @@ export function useDeletePetMedia(petId: string) {
         return api.delete(`api/Pet/${petId}/videos/${fileName}`);
       },
       onSuccess: () => {
+        toast.success("Video deleted successfully");
         queryClient.invalidateQueries({ queryKey: ["pet", petId] });
       },
       onError: (error) => {
+        toast.error("Failed to delete video");
         console.error("Failed to delete video:", error);
       },
     }),

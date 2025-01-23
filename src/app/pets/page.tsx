@@ -11,9 +11,14 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 export default function PetsPage() {
-  const { user } = useAuth();
-  const { data: pets, isLoading, error } = useUserPets(user!.id);
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
+
+  const { data: pets, isLoading, error } = useUserPets(user?.id || "");
+  if (!isAuthenticated || !user) {
+    router.push("/login");
+    return null;
+  }
 
   if (isLoading) {
     return (

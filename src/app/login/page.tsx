@@ -7,12 +7,13 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { loginSchema } from "@/lib/types/auth";
 import { useGeolocation } from "@/hooks/location/useGeoLocation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type LoginForm = z.infer<typeof loginSchema>;
 
@@ -70,10 +71,17 @@ any) {
 }
 
 export default function LoginPage() {
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, isAuthenticated } = useAuth();
   const [error, setError] = useState("");
   const { getLocation, permissionDenied, resetPermissionState } =
     useGeolocation();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
 
   const {
     register,
@@ -82,6 +90,15 @@ export default function LoginPage() {
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
+
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black/[0.96]">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(147,197,253,0.15),rgba(255,255,255,0))]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#2997FF]" />
+      </div>
+    );
+  }
 
   if (permissionDenied) {
     return (

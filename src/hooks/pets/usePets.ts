@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/auth/api";
 import { PetDto, CreatePetDto, UpdatePetDto } from "@/lib/types/pet";
+import { toast } from "sonner";
 
 export function useUserPets(userId: string) {
   return useQuery({
@@ -109,6 +110,7 @@ export function useCreatePet() {
       return response;
     },
     onSuccess: () => {
+      toast.success("Pet created successfully");
       queryClient.invalidateQueries({ queryKey: ["pets"] });
     },
   });
@@ -121,6 +123,7 @@ export function useUpdatePet(id: string) {
     mutationFn: (data: UpdatePetDto) =>
       api.put<CreatePetDto>(`api/Pet/${id}`, data),
     onSuccess: () => {
+      toast.success("Pet updated successfully");
       queryClient.invalidateQueries({ queryKey: ["pet", id] });
       queryClient.invalidateQueries({ queryKey: ["pets"] });
     },
@@ -142,9 +145,11 @@ export function useDeletePet() {
       }
     },
     onSuccess: () => {
+      toast.success("Pet deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["pets"] });
     },
     onError: (error) => {
+      toast.error("Failed to delete pet");
       console.error("Delete mutation error:", error);
     },
   });

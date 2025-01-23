@@ -4,7 +4,14 @@ import { useUpdateMatchStatus } from "@/hooks/matches/useMatches";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PetGallery } from "@/components/pets/detail/PetGallery";
-import { Check, X, Clock, Calendar, PawPrint } from "lucide-react";
+import {
+  Check,
+  X,
+  Clock,
+  Calendar,
+  PawPrint,
+  MessageSquare,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/profile/useProfile";
@@ -12,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { PetPurpose } from "@/lib/types/pet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 interface ExistingMatchCardProps {
   match: MatchDto;
@@ -70,7 +78,7 @@ export function ExistingMatchCard({
       className="group"
     >
       <Card className="overflow-hidden bg-white/5 backdrop-blur-xl border-white/10">
-      <div className="relative">
+        <div className="relative">
           <PetGallery
             photos={targetPet.photos}
             videos={targetPet.videos}
@@ -139,18 +147,20 @@ export function ExistingMatchCard({
               <Separator className="bg-white/[0.08]" />
 
               <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8 ring-1 ring-white/10">
-                  <AvatarImage
-                    src={owner.profilePicturePath || ""}
-                    alt={owner.name}
-                  />
-                  <AvatarFallback className="bg-white/5 text-white/80 text-xs">
-                    {owner.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
+                <Link href={`/profile/${owner.id}`}>
+                  <Avatar className="h-8 w-8 ring-1 ring-white/10 transition-transform hover:scale-105">
+                    <AvatarImage
+                      src={owner.profilePicturePath || ""}
+                      alt={owner.name}
+                    />
+                    <AvatarFallback className="bg-white/5 text-white/80 text-xs">
+                      {owner.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -164,6 +174,17 @@ export function ExistingMatchCard({
                       )}
                     />
                   </div>
+                  {match.status === MatchStatus.Accepted && (
+                    <Link href={`/messages/${match.id}`}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-[#2997FF] hover:bg-[#2997FF]/10 transition-all duration-200"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </>

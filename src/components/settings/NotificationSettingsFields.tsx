@@ -28,8 +28,7 @@ export function NotificationSettingsFields({
   } as const;
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Notification Settings</h3>
+    <div className="space-y-6">
       {(Object.entries(notificationSettings) as [NotificationKey, string][])
         .filter(([key]) => !key.includes("Time"))
         .map(([key, label]) => (
@@ -38,12 +37,15 @@ export function NotificationSettingsFields({
             control={control}
             name={`notificationSettings.${key}` as const}
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between">
-                <FormLabel>{label}</FormLabel>
+              <FormItem className="flex items-center justify-between space-x-4">
+                <FormLabel className="text-white/80 font-medium">
+                  {label}
+                </FormLabel>
                 <FormControl>
                   <Switch
                     checked={field.value as boolean}
                     onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-[#38bdf8]"
                   />
                 </FormControl>
               </FormItem>
@@ -51,13 +53,15 @@ export function NotificationSettingsFields({
           />
         ))}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/[0.08]">
         <FormField
           control={control}
           name="notificationSettings.notificationStartTime"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Quiet Hours Start</FormLabel>
+              <FormLabel className="text-white/80 font-medium">
+                Quiet Hours Start
+              </FormLabel>
               <FormControl>
                 <TimePickerInput {...field} />
               </FormControl>
@@ -69,7 +73,9 @@ export function NotificationSettingsFields({
           name="notificationSettings.notificationEndTime"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Quiet Hours End</FormLabel>
+              <FormLabel className="text-white/80 font-medium">
+                Quiet Hours End
+              </FormLabel>
               <FormControl>
                 <TimePickerInput {...field} />
               </FormControl>
