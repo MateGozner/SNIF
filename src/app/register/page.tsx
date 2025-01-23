@@ -4,18 +4,109 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import type { z } from "zod";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { registerSchema } from "@/lib/types/auth";
 import { useRegister } from "@/hooks/auth/useRegister";
 import { useGeolocation } from "@/hooks/location/useGeoLocation";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 type RegisterForm = z.infer<typeof registerSchema>;
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+function AnimatedInput({
+  register,
+  name,
+  label,
+  error,
+  type,
+  placeholder,
+  disabled,
+  className,
+}: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+any) {
+  return (
+    <motion.div variants={fadeInUp} className="space-y-2">
+      <Label htmlFor={name} className="text-sm font-medium text-white/80 pl-1">
+        {label}
+      </Label>
+      <div className="relative">
+        <Input
+          {...register(name)}
+          id={name}
+          type={type}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={`h-12 px-4 bg-white/10 backdrop-blur-xl text-white border-white/20 
+            focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 rounded-xl 
+            transition-all duration-200 placeholder:text-white/40 ${className}`}
+        />
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              className="absolute -bottom-6 left-1 text-red-400 text-sm"
+            >
+              {error.message}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+function LoadingSpinner() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex items-center gap-2"
+    >
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{
+          duration: 1,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      >
+        <Loader2 className="h-5 w-5" />
+      </motion.div>
+      <span>Creating Account...</span>
+    </motion.div>
+  );
+}
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -39,8 +130,9 @@ export default function RegisterPage() {
       const location = await getLocation();
       await register.mutateAsync({
         ...data,
-        location
+        location,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -49,140 +141,132 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FBFBFD] to-[#F5F5F7]">
-      <div className="w-full max-w-md p-4">
-        <Card className="w-full shadow-2xl border-0 bg-white/80 backdrop-blur-xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-3xl font-semibold text-[#1d1d1f] text-center tracking-tight">
-              Create Account
-            </CardTitle>
+    <div className="min-h-screen flex items-center justify-center bg-black/[0.96]">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(147,197,253,0.15),rgba(255,255,255,0))]" />
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+        className="w-full max-w-md p-4 relative"
+      >
+        <Card className="w-full border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl overflow-hidden">
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 45, 0],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          />
+
+          <CardHeader className="relative">
+            <motion.div variants={fadeInUp}>
+              <CardTitle className="text-3xl text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                Create Account
+              </CardTitle>
+            </motion.div>
           </CardHeader>
-          <CardContent>
-            {error && (
-              <Alert
-                variant="destructive"
-                className="mb-6 bg-red-50 border border-red-100"
-              >
-                <AlertDescription className="text-red-600">
+
+          <CardContent className="relative">
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-red-500/20 backdrop-blur-sm text-red-300 p-4 rounded-xl mb-8"
+                >
                   {error}
-                </AlertDescription>
-              </Alert>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="name"
-                  className="text-sm font-medium text-[#1d1d1f]"
-                >
-                  Name
-                </Label>
-                <Input
-                  {...registerField("name")}
-                  id="name"
-                  type="text"
-                  disabled={isLoading}
-                  className="h-12 rounded-xl bg-[#F5F5F7] border-0 focus:ring-2 focus:ring-[#0066CC] transition-all duration-200 placeholder:text-gray-400"
-                  placeholder="Enter your name"
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-sm font-medium text-[#1d1d1f]"
-                >
-                  Email
-                </Label>
-                <Input
-                  {...registerField("email")}
-                  id="email"
-                  type="email"
-                  disabled={isLoading}
-                  className="h-12 rounded-xl bg-[#F5F5F7] border-0 focus:ring-2 focus:ring-[#0066CC] transition-all duration-200 placeholder:text-gray-400"
-                  placeholder="Enter your email"
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="password"
-                  className="text-sm font-medium text-[#1d1d1f]"
-                >
-                  Password
-                </Label>
-                <Input
-                  {...registerField("password")}
-                  id="password"
-                  type="password"
-                  disabled={isLoading}
-                  className="h-12 rounded-xl bg-[#F5F5F7] border-0 focus:ring-2 focus:ring-[#0066CC] transition-all duration-200 placeholder:text-gray-400"
-                  placeholder="Create a password"
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              <AnimatedInput
+                register={registerField}
+                name="name"
+                label="Name"
+                type="text"
+                placeholder="Enter your name"
+                error={errors.name}
                 disabled={isLoading}
-                className="w-full h-12 bg-[#0066CC] hover:bg-[#0055AC] text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-[0.98] active:scale-[0.97] mt-4"
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Creating Account...
-                  </span>
-                ) : (
-                  "Create Account"
-                )}
-              </Button>
+              />
+
+              <AnimatedInput
+                register={registerField}
+                name="email"
+                label="Email"
+                type="email"
+                placeholder="Enter your email"
+                error={errors.email}
+                disabled={isLoading}
+              />
+
+              <AnimatedInput
+                register={registerField}
+                name="password"
+                label="Password"
+                type="password"
+                placeholder="Create a password"
+                error={errors.password}
+                disabled={isLoading}
+              />
+
+              <motion.div variants={fadeInUp}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 
+                      hover:from-blue-600 hover:to-blue-700 text-white border-0 
+                      h-12 rounded-xl flex items-center justify-center gap-2"
+                  >
+                    <AnimatePresence mode="wait">
+                      {isLoading ? (
+                        <LoadingSpinner key="loading" />
+                      ) : (
+                        <motion.div
+                          key="button-content"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="flex items-center gap-2"
+                        >
+                          Create Account
+                          <ArrowRight className="w-4 h-4" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </Button>
+                </motion.div>
+              </motion.div>
             </form>
 
-            <div className="mt-6 text-center text-sm text-gray-500">
+            <motion.p
+              variants={fadeInUp}
+              className="text-center mt-6 text-white/60"
+            >
               Already have an account?{" "}
-              <button
+              <motion.button
                 onClick={() => router.push("/login")}
-                className="text-[#0066CC] hover:underline font-medium transition-colors"
+                className="text-blue-400 hover:text-blue-300 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 Sign in
-              </button>
-            </div>
+              </motion.button>
+            </motion.p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 }

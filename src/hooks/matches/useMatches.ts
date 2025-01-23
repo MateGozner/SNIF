@@ -18,6 +18,36 @@ export function usePendingMatches(petId: string) {
   });
 }
 
+export function useAllPetsPendingMatches(pets?: PetDto[]) {
+  return useQuery({
+    queryKey: ['all-pets-pending-matches'],
+    queryFn: async () => {
+      if (!pets?.length) return [];
+      const promises = pets.map(pet => 
+        api.get<MatchDto[]>(`api/match/pet/${pet.id}/pending`)
+      );
+      const results = await Promise.all(promises);
+      return results.flat();
+    },
+    enabled: !!pets?.length,
+  });
+}
+
+export function useAllPetsMatches(pets?: PetDto[]) {
+  return useQuery({
+    queryKey: ['all-pets-matches'],
+    queryFn: async () => {
+      if (!pets?.length) return [];
+      const promises = pets.map(pet => 
+        api.get<MatchDto[]>(`api/match/pet/${pet.id}`)
+      );
+      const results = await Promise.all(promises);
+      return results.flat();
+    },
+    enabled: !!pets?.length,
+  });
+}
+
 export function usePotentialMatches(petId: string, purpose?: PetPurpose) {
   const queryKey = purpose
     ? ["matches", petId, "potential", purpose]

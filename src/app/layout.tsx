@@ -1,7 +1,5 @@
-// layout.tsx
 "use client";
 
-import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/auth/AuthContext";
@@ -53,9 +51,11 @@ export default function RootLayout({
                     </div>
                     <Toaster
                       position="top-right"
+                      richColors
                       toastOptions={{
-                        className: "bg-transparent border-0 p-0 w-auto",
+                        className: "!p-0 !bg-transparent !border-0",
                         duration: 5000,
+                        style: { zIndex: 9999 },
                       }}
                     />
                   </ChatProvider>

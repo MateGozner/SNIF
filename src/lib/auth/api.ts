@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuthStore } from "../store/authStore";
-import { AuthService } from "./auth";
+import { AuthResponse } from "../types/auth";
+import { cookies } from "./cookies";
 
 interface FetchOptions extends RequestInit {
   timeout?: number;
@@ -10,24 +11,45 @@ interface FetchOptions extends RequestInit {
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const DEFAULT_TIMEOUT = 8000;
 
+
 const createAbortController = (timeout: number) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   return { controller, timeoutId };
 };
 
-const handleResponse = async (response: Response) => {
-  if (!response.ok) {
-    if (response.status === 401) {
-      AuthService.removeToken();
-      window.location.href = "/login";
+export const validateToken = async (): Promise<AuthResponse | null> => {
+  const token = cookies.getToken();
+  if (!token) return null;
+
+  try {
+    const response = await fetch(`${BASE_URL}api/User/validate-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token }),
+    });
+
+    if (!response.ok) throw new Error('Token validation failed');
+
+    const data: AuthResponse = await response.json();
+    if (data.token) {
+      cookies.setToken(data.token);
+      useAuthStore.getState().setAuth(data.token, {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        location: data.location,
+      });
+      return data;
     }
-    throw new Error(await response.text());
+    return null;
+  } catch (error) {
+    cookies.removeToken();
+    useAuthStore.getState().removeAuth();
+    return null;
   }
-
-  if (response.status === 204) return null
-
-  return response.json();
 };
 
 const fetchWithAuth = async <T>(
@@ -38,25 +60,49 @@ const fetchWithAuth = async <T>(
   const { controller, timeoutId } = createAbortController(timeout);
 
   try {
-    const token = useAuthStore.getState().token;
-    const isFormData = fetchOptions.body instanceof FormData;
-    const headers = new Headers({
-      ...(!isFormData && { "Content-Type": "application/json" }),
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    });
+    const makeRequest = async (token?: string) => {
+      const isFormData = fetchOptions.body instanceof FormData;
+      const headers = new Headers({
+        ...(!isFormData && { "Content-Type": "application/json" }),
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      });
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      ...fetchOptions,
-      headers,
-      signal: controller.signal,
-    });
+      return fetch(`${BASE_URL}${endpoint}`, {
+        ...fetchOptions,
+        headers,
+        signal: controller.signal,
+      });
+    };
 
-    const data = await handleResponse(response);
-    return data as T;
+    const token = cookies.getToken();
+    let response = await makeRequest(token);
+
+    if (response.status === 401) {
+      const validationResult = await validateToken();
+      if (validationResult?.token) {
+        response = await makeRequest(validationResult.token);
+      } else {
+        cookies.removeToken();
+        useAuthStore.getState().removeAuth();
+        window.location.href = "/login";
+        throw new Error('Authentication failed');
+      }
+    }
+
+    return handleResponse(response);
   } finally {
     clearTimeout(timeoutId);
   }
+};
+
+const handleResponse = async (response: Response) => {
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  if (response.status === 204) return null;
+  return response.json();
 };
 
 export const api = {
