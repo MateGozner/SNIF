@@ -5,24 +5,43 @@ import { ProfileBadges } from "@/components/profile/ProfileBadge";
 import { ProfileLocation } from "@/components/profile/ProfileLocation";
 import { ProfileNameEdit } from "@/components/profile/ProfileNameEdit";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useProfile } from "@/hooks/profile/useProfile";
-import { useUpdateProfile } from "@/hooks/profile/useUpdateProfile";
+import { useProfile, useProfilePicture } from "@/hooks/profile/useProfile";
+import {
+  useUpdateProfile,
+  useUpdateProfilePicture,
+} from "@/hooks/profile/useUpdateProfile";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ProfileAvatarWithStatus } from "@/components/profile/ProfileAvatarWithStatus";
 import { useAuth } from "@/contexts/auth/AuthContext";
+import { redirect } from "next/navigation";
+import { ProfilePictureDto } from "@/lib/types/user";
 
 export default function MyProfile() {
-  const { user } = useAuth();
-  const { data: profile, isLoading, error } = useProfile(user!.id);
-  const updateProfile = useUpdateProfile(user!.id);
+  const { user, isLoading: isUserLoading, isAuthenticated } = useAuth();
+
+  if (isUserLoading) {
+    return <LoadingState />;
+  }
+
+  if (!isAuthenticated) {
+    redirect("/login");
+  }
+
+  return <AuthenticatedProfile userId={user!.id} />;
+}
+
+function AuthenticatedProfile({ userId }: { userId: string }) {
+  const { data: profile, isLoading, error } = useProfile(userId);
+  const { data: profilePicture } = useProfilePicture(userId) as {
+    data: ProfilePictureDto | undefined;
+  };
+  const updateProfile = useUpdateProfile(userId);
+  const updateProfilePicture = useUpdateProfilePicture(userId);
   const [isEditing, setIsEditing] = useState(false);
 
   const handleFileSelect = async (file: File) => {
-    await updateProfile.mutateAsync({
-      name: profile?.name || "",
-      profilePicture: file,
-    });
+    await updateProfilePicture.mutateAsync(file);
   };
 
   const handleSave = async (newName: string) => {
@@ -33,6 +52,8 @@ export default function MyProfile() {
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState error={error as Error} />;
   if (!profile) return null;
+
+  const isPending = updateProfile.isPending || updateProfilePicture.isPending;
 
   return (
     <div className="relative min-h-screen bg-black/[0.98]">
@@ -51,7 +72,7 @@ export default function MyProfile() {
             >
               <div className="relative">
                 <ProfileAvatarWithStatus
-                  profilePicture={profile.profilePicturePath}
+                  profilePicture={profilePicture?.url}
                   name={profile.name}
                   onFileSelect={handleFileSelect}
                   isOnFileSelect={true}
@@ -67,7 +88,7 @@ export default function MyProfile() {
                     onEdit={() => setIsEditing(true)}
                     onSave={handleSave}
                     onCancel={() => setIsEditing(false)}
-                    isPending={updateProfile.isPending}
+                    isPending={isPending}
                   />
                   <p className="text-white/60 text-sm">
                     @{profile.name.toLowerCase().replace(/\s+/g, "")}

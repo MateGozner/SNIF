@@ -9,7 +9,7 @@ export function useUpdatePreferences(userId: string) {
   return useMutation({
     mutationFn: async (data: UpdatePreferencesDto) => {
       const response = await api.put<UserDto>(
-        `api/User/preferences/${userId}`,
+        `api/users/${userId}/preferences`,
         data
       );
       return response;

@@ -23,7 +23,7 @@ export const validateToken = async (): Promise<AuthResponse | null> => {
   if (!token) return null;
 
   try {
-    const response = await fetch(`${BASE_URL}api/User/validate-token`, {
+    const response = await fetch(`${BASE_URL}api/users/token/validate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

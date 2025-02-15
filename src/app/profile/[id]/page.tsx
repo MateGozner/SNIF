@@ -4,12 +4,13 @@ import { ErrorState, LoadingState } from "@/components/profile/LoadingState";
 import { ProfileBadges } from "@/components/profile/ProfileBadge";
 import { ProfileLocation } from "@/components/profile/ProfileLocation";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useProfile } from "@/hooks/profile/useProfile";
+import { useProfile, useProfilePicture } from "@/hooks/profile/useProfile";
 import { use, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ProfileAvatarWithStatus } from "@/components/profile/ProfileAvatarWithStatus";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { useRouter } from "next/navigation";
+import { ProfilePictureDto } from "@/lib/types/user";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -20,6 +21,9 @@ export default function ProfilePage({ params }: PageProps) {
   const router = useRouter();
   const { user } = useAuth();
   const { data: profile, isLoading, error } = useProfile(id);
+  const { data: profilePicture } = useProfilePicture(id) as {
+    data: ProfilePictureDto | undefined;
+  };
 
   useEffect(() => {
     if (user?.id === id) {
@@ -48,7 +52,7 @@ export default function ProfilePage({ params }: PageProps) {
             >
               <div className="relative">
                 <ProfileAvatarWithStatus
-                  profilePicture={profile.profilePicturePath}
+                  profilePicture={profilePicture?.url}
                   name={profile.name}
                   showStatus={false}
                   isOnFileSelect={false}

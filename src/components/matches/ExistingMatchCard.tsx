@@ -14,12 +14,13 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useProfile } from "@/hooks/profile/useProfile";
+import { useProfile, useProfilePicture } from "@/hooks/profile/useProfile";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { PetPurpose } from "@/lib/types/pet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { ProfilePictureDto } from "@/lib/types/user";
 
 interface ExistingMatchCardProps {
   match: MatchDto;
@@ -36,6 +37,11 @@ export function ExistingMatchCard({
       ? match.targetPet
       : match.initiatorPet;
   const { data: owner } = useProfile(targetPet.ownerId);
+  const { data: reciveProfilePicture } = useProfilePicture(
+    targetPet.ownerId
+  ) as {
+    data: ProfilePictureDto | undefined;
+  };
 
   const statusConfig = {
     [MatchStatus.Pending]: {
@@ -150,7 +156,7 @@ export function ExistingMatchCard({
                 <Link href={`/profile/${owner.id}`}>
                   <Avatar className="h-8 w-8 ring-1 ring-white/10 transition-transform hover:scale-105">
                     <AvatarImage
-                      src={owner.profilePicturePath || ""}
+                      src={reciveProfilePicture?.url || ""}
                       alt={owner.name}
                     />
                     <AvatarFallback className="bg-white/5 text-white/80 text-xs">

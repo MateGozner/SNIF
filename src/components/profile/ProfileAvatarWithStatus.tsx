@@ -23,6 +23,7 @@ export function ProfileAvatarWithStatus({
   showStatus = true,
   size = "md",
 }: ProfileAvatarWithStatusProps) {
+  console.log("Profile picture url", profilePicture);
   return (
     <div className="flex flex-col items-center gap-2">
       <ProfileAvatar

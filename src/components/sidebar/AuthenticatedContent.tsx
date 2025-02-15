@@ -3,11 +3,12 @@
 import { Navigation } from "./Navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useProfile } from "@/hooks/profile/useProfile";
+import { useProfile, useProfilePicture } from "@/hooks/profile/useProfile";
 import { UserProps } from "@/lib/types/sidebar";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { ErrorState, LoadingState } from "./Loading";
+import { ProfilePictureDto } from "@/lib/types/user";
 
 interface AuthenticatedContentProps {
   user: UserProps;
@@ -21,6 +22,9 @@ export function AuthenticatedContent({
   onLogout,
 }: AuthenticatedContentProps) {
   const { data: profile, isLoading, error, refetch } = useProfile(user.id);
+    const { data: profilePicture } = useProfilePicture(user.id) as {
+      data: ProfilePictureDto | undefined;
+    };
 
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState retry={() => refetch()} />;
@@ -36,7 +40,7 @@ export function AuthenticatedContent({
             className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-accent"
           >
             <Avatar className="h-10 w-10 border border-border">
-              <AvatarImage src={profile.profilePicturePath} />
+              <AvatarImage src={profilePicture?.url} />
               <AvatarFallback className="bg-[#2997FF] text-white">
                 {profile.name.substring(0, 2).toUpperCase()}
               </AvatarFallback>

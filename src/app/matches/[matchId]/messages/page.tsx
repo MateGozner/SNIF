@@ -3,8 +3,9 @@
 import { Chat } from "@/components/chat/Chat";
 import { Button } from "@/components/ui/button";
 import { useMatch } from "@/hooks/matches/useMatches";
-import { useProfile } from "@/hooks/profile/useProfile";
+import { useProfile, useProfilePicture } from "@/hooks/profile/useProfile";
 import { useAuthStore } from "@/lib/store/authStore";
+import { ProfilePictureDto } from "@/lib/types/user";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { redirect, useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -24,6 +25,11 @@ export default function ChatPage() {
 
   // Call useProfile unconditionally
   const { data: receiver } = useProfile(targetPet?.ownerId ?? "");
+  const { data: reciveProfilePicture } = useProfilePicture(
+    targetPet?.ownerId ?? ""
+  ) as {
+    data: ProfilePictureDto | undefined;
+  };
 
   if (isLoading) {
     return (
@@ -66,7 +72,7 @@ export default function ChatPage() {
             matchId={params.matchId as string}
             receiverId={receiver.id}
             receiverName={receiver.name}
-            receiverAvatar={receiver.profilePicturePath}
+            receiverAvatar={reciveProfilePicture?.url}
           />
         </div>
       </div>

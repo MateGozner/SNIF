@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/authStore";
 import { useLogin, useLogout } from "@/hooks/auth/useAuth";
@@ -14,24 +14,34 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, user, setAuth, removeAuth } = useAuthStore();
+  const [loading, setLoading] = useState(true);
   const loginMutation = useLogin();
   const logoutMutation = useLogout();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = cookies.getToken();
+      try {
+        setLoading(true);
+        const token = cookies.getToken();
 
-      if (token && !isAuthenticated) {
-        const validationResult = await validateToken();
-        if (!validationResult) {
+        if (token && !isAuthenticated) {
+          const validationResult = await validateToken();
+          if (!validationResult) {
+            removeAuth();
+            router.push("/login");
+          }
+        }
+
+        if (!token && isAuthenticated) {
           removeAuth();
           router.push("/login");
         }
-      }
-
-      if (!token && isAuthenticated) {
+      } catch (error) {
+        console.error("Auth check failed:", error);
         removeAuth();
         router.push("/login");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -39,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("storage", checkAuth);
     return () => window.removeEventListener("storage", checkAuth);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, removeAuth, router]);
 
   const login = async (
     email: string,
@@ -80,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         isAuthenticated,
-        isLoading: loginMutation.isPending || logoutMutation.isPending,
+        isLoading: loading,
         user,
         login,
         logout,

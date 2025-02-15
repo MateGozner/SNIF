@@ -1,4 +1,4 @@
-import { useProfile } from "@/hooks/profile/useProfile";
+import { useProfile, useProfilePicture } from "@/hooks/profile/useProfile";
 import { useMatch } from "@/hooks/matches/useMatches";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { ProfileAvatarWithStatus } from "@/components/profile/ProfileAvatarWithStatus";
 import { useOnlineStatus } from "@/contexts/signalR/OnlineContext";
 import { ChatSummaryDto } from "@/lib/types/message";
+import { ProfilePictureDto } from "@/lib/types/user";
 
 export function ChatListItem({
   chat,
@@ -16,6 +17,9 @@ export function ChatListItem({
 }) {
   const { data: match } = useMatch(chat.matchId);
   const { data: partner } = useProfile(chat.partnerId);
+  const { data: reciveProfilePicture } = useProfilePicture(chat.partnerId) as {
+    data: ProfilePictureDto | undefined;
+  };
   const { onlineUsers } = useOnlineStatus();
   const isOnline = onlineUsers.includes(chat.partnerId);
 
@@ -35,7 +39,7 @@ export function ChatListItem({
       <div className="flex items-center gap-3">
         <div className="relative">
           <ProfileAvatarWithStatus
-            profilePicture={partner.profilePicturePath}
+            profilePicture={reciveProfilePicture?.url}
             name={partner.name}
             isOnline={isOnline}
             showStatus={true}

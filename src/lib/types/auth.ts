@@ -1,15 +1,36 @@
 import { z } from "zod";
 import { LocationDto } from "./location";
 
-export const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  name: z.string().min(2, "Name must be at least 2 characters"),
-});
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter");
+
+const nameSchema = z
+  .string()
+  .min(2, "Name must be at least 2 characters")
+  .regex(/^[a-zA-Z0-9]+$/, "Name can only contain letters and numbers");
+
+export const registerSchema = z
+  .object({
+    email: z
+      .string()
+      .email("Invalid email address")
+      .max(255, "Email cannot exceed 255 characters"),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+    name: nameSchema,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: passwordSchema,
 });
 
 export interface AuthToken {
@@ -52,13 +73,17 @@ export interface LoginData {
   email: string;
   password: string;
   rememberMe?: boolean;
-  location? : LocationDto;
+  location?: LocationDto;
 }
 
 export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
-  login: (email: string, password: string, location?: LocationDto) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    location?: LocationDto
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }

@@ -217,6 +217,16 @@ export default function RegisterPage() {
                 disabled={isLoading}
               />
 
+              <AnimatedInput
+                register={registerField}
+                name="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                placeholder="Confirm your password"
+                error={errors.confirmPassword}
+                disabled={isLoading}
+              />
+
               <motion.div variants={fadeInUp}>
                 <motion.div
                   whileHover={{ scale: 1.02 }}

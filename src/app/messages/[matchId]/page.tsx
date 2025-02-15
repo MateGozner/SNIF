@@ -1,11 +1,12 @@
 "use client";
 import { Chat } from "@/components/chat/Chat";
 import { useAuthStore } from "@/lib/store/authStore";
-import { useProfile } from "@/hooks/profile/useProfile";
+import { useProfile, useProfilePicture } from "@/hooks/profile/useProfile";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useMatch } from "@/hooks/matches/useMatches";
 import { toast } from "sonner";
+import { ProfilePictureDto } from "@/lib/types/user";
 
 export default function ChatPage() {
   const params = useParams();
@@ -24,6 +25,11 @@ export default function ChatPage() {
   const { data: receiver, isLoading: isLoadingUser } = useProfile(
     targetPet?.ownerId ?? ""
   );
+    const { data: reciveProfilePicture } = useProfilePicture(
+      targetPet?.ownerId ?? ""
+    ) as {
+      data: ProfilePictureDto | undefined;
+    };
 
   if (isLoadingChat || isLoadingUser) {
     return (
@@ -49,7 +55,7 @@ export default function ChatPage() {
       matchId={params.matchId as string}
       receiverId={receiver.id}
       receiverName={receiver.name}
-      receiverAvatar={receiver.profilePicturePath}
+      receiverAvatar={reciveProfilePicture?.url}
     />
   );
 }

@@ -11,7 +11,7 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: async (data: LoginData) => {
-      const response = await api.post<AuthResponse>("api/User/login", data);
+      const response = await api.post<AuthResponse>("api/users/token", data);
       console.log(response);
       const user: User = {
         id: response.id,
@@ -33,7 +33,7 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      await api.post("api/User/logout", {});
+      await api.delete("api/users/token");
       toast.success("Logged out successfully");
       removeAuth();
       router.push("/login");

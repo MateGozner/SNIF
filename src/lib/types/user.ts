@@ -32,8 +32,12 @@ export interface UserDto {
 
 export interface UpdateUserPersonalInfoDto {
   name: string;
-  profilePicture?: File;
 }
+
+export interface ProfilePictureDto {
+  url: string;
+}
+
 
 export interface NotificationSettings {
   emailNotifications: boolean;
