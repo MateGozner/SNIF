@@ -19,10 +19,11 @@ export function PotentialMatchCard({
   currentPetId,
   purpose,
 }: PotentialMatchCardProps) {
-  const createMatch = useCreateMatch(currentPetId);
+  const createMatch = useCreateMatch();
 
   const handleMatch = async () => {
     await createMatch.mutateAsync({
+      initiatorPetId: currentPetId,
       targetPetId: pet.id,
       matchPurpose: purpose,
     });

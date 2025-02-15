@@ -17,6 +17,7 @@ export interface MatchDto {
 }
 
 export interface CreateMatchDto {
+  initiatorPetId: string;
   targetPetId: string;
   matchPurpose: PetPurpose;
 }

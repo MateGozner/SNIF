@@ -6,11 +6,11 @@ import { cookies } from "./cookies";
 
 interface FetchOptions extends RequestInit {
   timeout?: number;
+  params?: Record<string, unknown>;
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const DEFAULT_TIMEOUT = 8000;
-
 
 const createAbortController = (timeout: number) => {
   const controller = new AbortController();
@@ -24,14 +24,14 @@ export const validateToken = async (): Promise<AuthResponse | null> => {
 
   try {
     const response = await fetch(`${BASE_URL}api/users/token/validate`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ token }),
     });
 
-    if (!response.ok) throw new Error('Token validation failed');
+    if (!response.ok) throw new Error("Token validation failed");
 
     const data: AuthResponse = await response.json();
     if (data.token) {
@@ -56,7 +56,7 @@ const fetchWithAuth = async <T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> => {
-  const { timeout = DEFAULT_TIMEOUT, ...fetchOptions } = options;
+  const { timeout = DEFAULT_TIMEOUT, params, ...fetchOptions } = options;
   const { controller, timeoutId } = createAbortController(timeout);
 
   try {
@@ -68,7 +68,17 @@ const fetchWithAuth = async <T>(
         ...options.headers,
       });
 
-      return fetch(`${BASE_URL}${endpoint}`, {
+      // Create URL with query parameters
+      const url = new URL(`${BASE_URL}${endpoint}`);
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            url.searchParams.append(key, String(value));
+          }
+        });
+      }
+
+      return fetch(url.toString(), {
         ...fetchOptions,
         headers,
         signal: controller.signal,
@@ -86,7 +96,7 @@ const fetchWithAuth = async <T>(
         cookies.removeToken();
         useAuthStore.getState().removeAuth();
         window.location.href = "/login";
-        throw new Error('Authentication failed');
+        throw new Error("Authentication failed");
       }
     }
 
@@ -128,6 +138,20 @@ export const api = {
     return fetchWithAuth<T>(endpoint, {
       ...options,
       method: "PUT",
+      headers,
+      body: isFormData ? data : JSON.stringify(data),
+    });
+  },
+
+  patch: <T>(endpoint: string, data: unknown, options?: FetchOptions) => {
+    const isFormData = data instanceof FormData;
+    const headers = {
+      ...(!isFormData && { "Content-Type": "application/json" }),
+    };
+
+    return fetchWithAuth<T>(endpoint, {
+      ...options,
+      method: "PATCH",
       headers,
       body: isFormData ? data : JSON.stringify(data),
     });

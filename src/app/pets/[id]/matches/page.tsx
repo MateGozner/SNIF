@@ -44,7 +44,7 @@ export default function PetMatchesPage() {
   const { data: allMatches, isLoading: isAllMatchesLoading } = usePetMatches(
     params.id as string
   );
-  const createMatch = useCreateMatch(params.id as string);
+  const createMatch = useCreateMatch();
 
   if (isPetLoading || !pet) {
     return (
@@ -57,6 +57,7 @@ export default function PetMatchesPage() {
   const handleSwipe = (direction: "left" | "right", petIndex: number) => {
     if (direction === "right" && potentialMatches?.[petIndex]) {
       createMatch.mutate({
+        initiatorPetId: pet.id,
         targetPetId: potentialMatches[petIndex].id,
         matchPurpose: selectedPurpose,
       });

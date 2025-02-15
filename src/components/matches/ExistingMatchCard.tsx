@@ -31,7 +31,7 @@ export function ExistingMatchCard({
   match,
   currentPetId,
 }: ExistingMatchCardProps) {
-  const updateStatus = useUpdateMatchStatus(match.id);
+  const updateStatus = useUpdateMatchStatus();
   const targetPet =
     match.initiatorPet.id === currentPetId
       ? match.targetPet
@@ -205,7 +205,10 @@ export function ExistingMatchCard({
                 size="sm"
                 className="flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                 onClick={() =>
-                  updateStatus.mutate({ status: MatchStatus.Rejected })
+                  updateStatus.mutate({
+                    id: match.id,
+                    status: MatchStatus.Rejected,
+                  })
                 }
                 disabled={updateStatus.isPending}
               >
@@ -216,7 +219,10 @@ export function ExistingMatchCard({
                 size="sm"
                 className="flex-1 bg-blue-500 hover:bg-blue-600"
                 onClick={() =>
-                  updateStatus.mutate({ status: MatchStatus.Accepted })
+                  updateStatus.mutate({
+                    id: match.id,
+                    status: MatchStatus.Accepted,
+                  })
                 }
                 disabled={updateStatus.isPending}
               >
