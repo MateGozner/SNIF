@@ -86,8 +86,7 @@ export function ExistingMatchCard({
       <Card className="overflow-hidden bg-white/5 backdrop-blur-xl border-white/10">
         <div className="relative">
           <PetGallery
-            photos={targetPet.photos}
-            videos={targetPet.videos}
+            media={targetPet.media || []}
             name={targetPet.name}
             petId={targetPet.id}
             showAddMedia={false}

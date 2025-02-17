@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CreatePetDto } from "@/lib/types/pet";
+import { CreateMediaDto, CreatePetDto, MediaType } from "@/lib/types/pet";
 import { FileWithPreview, MediaUploadCore } from "../shared/MediaUploadCore";
 import { cn } from "@/lib/utils";
+import { fileToBase64 } from "@/lib/utils/fileHelpers";
 
-// Media Upload Component
 interface MediaUploadProps {
   initialData: Partial<CreatePetDto>;
   onNext: (data: Partial<CreatePetDto>) => void;
@@ -15,15 +15,27 @@ interface MediaUploadProps {
 }
 
 export function MediaUpload({ initialData, onNext, onBack }: MediaUploadProps) {
-  const [photos, setPhotos] = useState<FileWithPreview[]>([]);
-  const [videos, setVideos] = useState<FileWithPreview[]>([]);
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Convert files to media objects with base64 data
+    const mediaPromises = files.map(
+      async ({ file, type }): Promise<CreateMediaDto> => ({
+        type,
+        fileName: file.name,
+        contentType: file.type,
+        base64Data: await fileToBase64(file),
+        title: file.name,
+      })
+    );
+
+    const media = await Promise.all(mediaPromises);
+
     const updatedData: Partial<CreatePetDto> = {
       ...initialData,
-      photos: photos.map((p) => p.file),
-      videos: videos.map((v) => v.file),
+      media,
     };
+
     onNext(updatedData);
   };
 
@@ -39,14 +51,24 @@ export function MediaUpload({ initialData, onNext, onBack }: MediaUploadProps) {
       >
         <div className="p-6">
           <MediaUploadCore
-            photos={photos}
-            videos={videos}
-            onPhotosChange={setPhotos}
-            onVideosChange={setVideos}
+            files={files}
+            onFilesChange={setFiles}
             className="text-white"
           />
         </div>
       </Card>
+
+      {/* Media Summary */}
+      {files.length > 0 && (
+        <div className="flex gap-4 text-sm text-white/60">
+          <div>
+            Photos: {files.filter((f) => f.type === MediaType.Photo).length}
+          </div>
+          <div>
+            Videos: {files.filter((f) => f.type === MediaType.Video).length}
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex justify-between pt-6">
@@ -64,7 +86,7 @@ export function MediaUpload({ initialData, onNext, onBack }: MediaUploadProps) {
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={photos.length === 0 && videos.length === 0}
+          disabled={files.length === 0}
           className={cn(
             "bg-blue-500 hover:bg-blue-600 text-white",
             "disabled:opacity-50 disabled:cursor-not-allowed",

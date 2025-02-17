@@ -1,12 +1,11 @@
-import { PetDto, Gender } from "@/lib/types/pet";
+import { PetDto, Gender, MediaType } from "@/lib/types/pet";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { getImageUrl } from "@/lib/utils/urlTransformer";
 
-import { PawPrint, MapPin, Cat, Dog } from "lucide-react";
+import { PawPrint, Cat, Dog } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PetCardProps {
@@ -15,7 +14,8 @@ interface PetCardProps {
 
 export function PetCard({ pet }: PetCardProps) {
   const router = useRouter();
-  const coverImage = pet.photos[0] ? getImageUrl(pet.photos[0]) : null;
+  const coverImage =
+    pet.media?.find((m) => m.type === MediaType.Photo)?.url || null;
 
   // Species-specific styling
   const speciesConfig = {

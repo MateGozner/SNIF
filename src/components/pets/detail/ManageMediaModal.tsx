@@ -1,7 +1,7 @@
 // src/components/pets/detail/ManageMediaModal.tsx
 import { useState } from "react";
 import Image from "next/image";
-import { useDeletePetMedia } from "@/hooks/pets/usePetMedia";
+import { useDeletePetMedia, usePetMedia } from "@/hooks/pets/usePetMedia";
 import { Trash2, Image as Img, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,32 +15,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getImageUrl } from "@/lib/utils/urlTransformer";
+import { MediaType } from "@/lib/types/pet";
 
 interface ManageMediaModalProps {
   petId: string;
-  photos: string[];
-  videos: string[];
 }
 
-export function ManageMediaModal({
-  petId,
-  photos,
-  videos,
-}: ManageMediaModalProps) {
-  const [mediaType, setMediaType] = useState<"photos" | "videos">("photos");
+export function ManageMediaModal({ petId }: ManageMediaModalProps) {
+  const [mediaType, setMediaType] = useState<MediaType>(MediaType.Photo);
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
-  const { deletePhoto, deleteVideo } = useDeletePetMedia(petId);
+  const { data: media } = usePetMedia(petId, mediaType);
+  const deletePetMedia = useDeletePetMedia(petId);
 
   const handleDelete = async () => {
     if (!selectedMedia) return;
 
     try {
-      if (mediaType === "photos") {
-        await deletePhoto.mutateAsync(selectedMedia);
-      } else {
-        await deleteVideo.mutateAsync(selectedMedia);
-      }
+      await deletePetMedia.mutateAsync(selectedMedia);
     } finally {
       setSelectedMedia(null);
     }
@@ -49,8 +40,12 @@ export function ManageMediaModal({
   return (
     <div className="space-y-6">
       <Tabs
-        value={mediaType}
-        onValueChange={(v) => setMediaType(v as "photos" | "videos")}
+        value={mediaType === MediaType.Photo ? "photos" : "videos"}
+        onValueChange={(v) => {
+          if (v === "photos" || v === "videos") {
+            setMediaType(v === "photos" ? MediaType.Photo : MediaType.Video);
+          }
+        }}
       >
         <TabsList className="bg-white/[0.02] border border-white/10">
           <TabsTrigger
@@ -58,44 +53,43 @@ export function ManageMediaModal({
             className="data-[state=active]:bg-white/10"
           >
             <Img className="h-4 w-4 mr-2" />
-            Photos ({photos.length})
+            Photos (
+            {media?.filter((m) => m.type === MediaType.Photo).length || 0})
           </TabsTrigger>
           <TabsTrigger
             value="videos"
             className="data-[state=active]:bg-white/10"
           >
             <Film className="h-4 w-4 mr-2" />
-            Videos ({videos.length})
+            Videos (
+            {media?.filter((m) => m.type === MediaType.Video).length || 0})
           </TabsTrigger>
         </TabsList>
       </Tabs>
 
       <div className="grid grid-cols-3 gap-4">
-        {(mediaType === "photos" ? photos : videos).map((media) => (
+        {media?.map((item) => (
           <div
-            key={media}
+            key={item.id}
             className="relative group aspect-square rounded-xl overflow-hidden"
           >
-            {mediaType === "photos" ? (
+            {item.type === MediaType.Photo ? (
               <Image
                 width={300}
                 height={300}
-                src={getImageUrl(media) as string}
-                alt=""
+                src={item.url}
+                alt={item.title || ""}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <video
-                src={getImageUrl(media)}
-                className="w-full h-full object-cover"
-              />
+              <video src={item.url} className="w-full h-full object-cover" />
             )}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
                 variant="destructive"
                 size="icon"
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                onClick={() => setSelectedMedia(media)}
+                onClick={() => setSelectedMedia(item.id)}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -111,7 +105,7 @@ export function ManageMediaModal({
         <AlertDialogContent className="bg-zinc-950 border-white/10">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">
-              Delete {mediaType === "photos" ? "Photo" : "Video"}?
+              Delete Media?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">
               This action cannot be undone.

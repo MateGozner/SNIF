@@ -1,87 +1,57 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/auth/api";
 import { toast } from "sonner";
+import { MediaResponseDto, MediaType } from "@/lib/types/pet";
+import { fileToBase64 } from "@/lib/utils/fileHelpers";
 
-export function useAddPetPhoto(petId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("photo", file);
-      return api.post<{ fileName: string }>(
-        `api/Pet/${petId}/photos`,
-        formData
-      );
-    },
-    onSuccess: () => {
-      toast.success("Photo uploaded successfully");
-      queryClient.invalidateQueries({ queryKey: ["pet", petId] });
-    },
+export function usePetMedia(petId: string, type?: MediaType) {
+  return useQuery({
+    queryKey: ["pets", petId, "media"],
+    queryFn: () =>
+      api.get<MediaResponseDto[]>(`api/pets/${petId}/media`, {
+        params: { type },
+      }),
   });
 }
 
-export function useAddPetVideo(petId: string) {
+export function useAddPetMedia(petId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("video", file);
-      return api.post<{ fileName: string }>(
-        `api/Pet/${petId}/videos`,
-        formData
-      );
+    mutationFn: async (data: {
+      file: File;
+      type: MediaType;
+      title?: string;
+    }) => {
+      // Convert file to base64
+      const base64 = await fileToBase64(data.file);
+
+      return api.post<MediaResponseDto>(`api/pets/${petId}/media`, {
+        type: data.type,
+        title: data.title,
+        fileName: data.file.name,
+        contentType: data.file.type,
+        base64Data: base64,
+      });
     },
     onSuccess: () => {
-      toast.success("Video uploaded successfully");
+      queryClient.invalidateQueries({ queryKey: ["pets", petId, "media"] });
       queryClient.invalidateQueries({ queryKey: ["pet", petId] });
+      toast.success("Media uploaded successfully");
     },
   });
 }
-
-const extractFileName = (url: string): string => {
-  const matches = url.match(/([^/]+\.[^.]+)$/);
-  return matches ? matches[1] : "";
-};
 
 export function useDeletePetMedia(petId: string) {
   const queryClient = useQueryClient();
 
-  return {
-    deletePhoto: useMutation({
-      mutationFn: async (photoUrl: string) => {
-        const fileName = extractFileName(photoUrl);
-        if (!fileName) {
-          throw new Error("Invalid photo URL");
-        }
-        return api.delete(`api/Pet/${petId}/photos/${fileName}`);
-      },
-      onSuccess: () => {
-        toast.success("Photo deleted successfully");
-        queryClient.invalidateQueries({ queryKey: ["pet", petId] });
-      },
-      onError: (error) => {
-        toast.error("Failed to delete photo");
-        console.error("Failed to delete photo:", error);
-      },
-    }),
-    deleteVideo: useMutation({
-      mutationFn: async (videoUrl: string) => {
-        const fileName = extractFileName(videoUrl);
-        if (!fileName) {
-          throw new Error("Invalid video URL");
-        }
-        return api.delete(`api/Pet/${petId}/videos/${fileName}`);
-      },
-      onSuccess: () => {
-        toast.success("Video deleted successfully");
-        queryClient.invalidateQueries({ queryKey: ["pet", petId] });
-      },
-      onError: (error) => {
-        toast.error("Failed to delete video");
-        console.error("Failed to delete video:", error);
-      },
-    }),
-  };
+  return useMutation({
+    mutationFn: (mediaId: string) =>
+      api.delete(`api/pets/${petId}/media/${mediaId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pets", petId, "media"] });
+      queryClient.invalidateQueries({ queryKey: ["pet", petId] });
+      toast.success("Media deleted successfully");
+    },
+  });
 }

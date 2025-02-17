@@ -1,8 +1,8 @@
+// src/components/pets/MediaUploadModal.tsx
 import { useState } from "react";
 import { FileWithPreview, MediaUploadCore } from "../shared/MediaUploadCore";
-import { useAddPetPhoto, useAddPetVideo } from "@/hooks/pets/usePetMedia";
+import { useAddPetMedia } from "@/hooks/pets/usePetMedia";
 import { Loader2, ImagePlus } from "lucide-react";
-
 import {
   Dialog,
   DialogContent,
@@ -18,36 +18,29 @@ import { cn } from "@/lib/utils";
 
 interface MediaUploadModalProps {
   petId: string;
-  actualPhotos?: string[];
-  actualVideos?: string[];
   children?: React.ReactNode;
 }
 
-export function MediaUploadModal({
-  petId,
-  actualPhotos,
-  actualVideos,
-  children,
-}: MediaUploadModalProps) {
+export function MediaUploadModal({ petId, children }: MediaUploadModalProps) {
   const [mode, setMode] = useState<"upload" | "manage">("upload");
-  const [photos, setPhotos] = useState<FileWithPreview[]>([]);
-  const [videos, setVideos] = useState<FileWithPreview[]>([]);
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const addPhoto = useAddPetPhoto(petId);
-  const addVideo = useAddPetVideo(petId);
+  const addMedia = useAddPetMedia(petId);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleUpload = async () => {
     setIsUploading(true);
     try {
-      const uploadPromises = [
-        ...photos.map(({ file }) => addPhoto.mutateAsync(file)),
-        ...videos.map(({ file }) => addVideo.mutateAsync(file)),
-      ];
+      const uploadPromises = files.map(({ file, type }) =>
+        addMedia.mutateAsync({
+          file,
+          type,
+          title: file.name,
+        })
+      );
 
       await Promise.all(uploadPromises);
-      setPhotos([]);
-      setVideos([]);
+      setFiles([]);
       setIsOpen(false);
     } catch (error) {
       console.error("Upload failed:", error);
@@ -58,8 +51,7 @@ export function MediaUploadModal({
 
   const handleClose = () => {
     setIsOpen(false);
-    setPhotos([]);
-    setVideos([]);
+    setFiles([]);
   };
 
   return (
@@ -121,12 +113,7 @@ export function MediaUploadModal({
         <div className="px-6 pb-6">
           {mode === "upload" ? (
             <div className="space-y-6">
-              <MediaUploadCore
-                photos={photos}
-                videos={videos}
-                onPhotosChange={setPhotos}
-                onVideosChange={setVideos}
-              />
+              <MediaUploadCore files={files} onFilesChange={setFiles} />
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button
@@ -138,9 +125,7 @@ export function MediaUploadModal({
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={
-                    isUploading || (photos.length === 0 && videos.length === 0)
-                  }
+                  disabled={isUploading || files.length === 0}
                   className={cn(
                     "px-6 min-w-[100px]",
                     "bg-blue-500 hover:bg-blue-600 text-white",
@@ -156,11 +141,7 @@ export function MediaUploadModal({
               </div>
             </div>
           ) : (
-            <ManageMediaModal
-              petId={petId}
-              photos={actualPhotos ?? []}
-              videos={actualVideos ?? []}
-            />
+            <ManageMediaModal petId={petId} />
           )}
         </div>
       </DialogContent>

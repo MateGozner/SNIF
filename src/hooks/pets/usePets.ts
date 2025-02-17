@@ -1,20 +1,42 @@
 // src/hooks/pets/usePets.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/auth/api";
-import { PetDto, CreatePetDto, UpdatePetDto } from "@/lib/types/pet";
+import {
+  PetDto,
+  CreatePetDto,
+  UpdatePetDto,
+  PetPurpose,
+} from "@/lib/types/pet";
 import { toast } from "sonner";
 
 export function useUserPets(userId: string) {
   return useQuery({
-    queryKey: ["pets", userId],
-    queryFn: () => api.get<PetDto[]>(`api/Pet/user/${userId}`),
+    queryKey: ["pets", { userId }],
+    queryFn: () =>
+      api.get<PetDto[]>("api/pets", {
+        params: { userId },
+      }),
   });
 }
 
 export function usePet(id: string) {
   return useQuery({
     queryKey: ["pet", id],
-    queryFn: () => api.get<PetDto>(`api/Pet/${id}`),
+    queryFn: () => api.get<PetDto>(`api/pets/${id}`),
+  });
+}
+
+export function usePets(options?: {
+  userId?: string;
+  purpose?: PetPurpose;
+  species?: string;
+}) {
+  return useQuery({
+    queryKey: ["pets", options],
+    queryFn: () =>
+      api.get<PetDto[]>("api/pets", {
+        params: options,
+      }),
   });
 }
 
@@ -23,95 +45,18 @@ export function useCreatePet() {
 
   return useMutation({
     mutationFn: async (data: CreatePetDto) => {
-      const formData = new FormData();
-
-      console.log("Creating pet:", data);
-
-      // Basic info
-      if (data.name) formData.append("Name", data.name);
-      if (data.species) formData.append("Species", data.species);
-      if (data.breed) formData.append("Breed", data.breed);
-      if (data.age !== undefined) formData.append("Age", data.age.toString());
-      if (data.gender !== undefined)
-        formData.append("Gender", data.gender.toString());
-
-      // Arrays and objects
-      if (data.purpose?.length) {
-        data.purpose.forEach((purpose, index) => {
-          formData.append(`Purpose[${index}]`, purpose.toString());
-        });
-      }
-      if (data.personality?.length) {
-        data.personality.forEach((personality, index) => {
-          formData.append(`Personality[${index}]`, personality.toString());
-        });
-      }
-
-      // Nested objects
-      if (data.medicalHistory) {
-        if (data.medicalHistory.lastCheckup) {
-          formData.append(
-            "MedicalHistory.LastCheckup",
-            data.medicalHistory.lastCheckup.toString()
-          );
-        }
-        if (data.medicalHistory.vetContact) {
-          formData.append(
-            "MedicalHistory.VetContact",
-            data.medicalHistory.vetContact
-          );
-        }
-        if (data.medicalHistory.isVaccinated !== undefined)
-          formData.append(
-            "MedicalHistory.IsVaccinated",
-            data.medicalHistory.isVaccinated.toString()
-          );
-        formData.append(
-          "MedicalHistory.IsVaccinated",
-          data.medicalHistory.isVaccinated.toString()
-        );
-        if (data.medicalHistory.vaccinationRecords?.length) {
-          data.medicalHistory.vaccinationRecords.forEach((vaccine, index) => {
-            formData.append(
-              `MedicalHistory.VaccinationRecords[${index}]`,
-              vaccine
-            );
-          });
-        }
-        if (data.medicalHistory.healthIssues?.length) {
-          data.medicalHistory.healthIssues?.forEach((issue, index) => {
-            formData.append(`MedicalHistory.HealthIssues[${index}]`, issue);
-          });
-        }
-      }
-      if (data.location) {
-        formData.append("Location.Latitude", data.location.latitude.toString());
-        formData.append(
-          "Location.Longitude",
-          data.location.longitude.toString()
-        );
-      }
-
-      // Files
-      if (data.photos) {
-        data.photos.forEach((photo) => {
-          formData.append("Photos", photo);
-        });
-      }
-      if (data.videos) {
-        data.videos.forEach((video) => {
-          formData.append("Videos", video);
-        });
-      }
-
-      console.log("Form data:", formData);
-
-      const response = await api.post<PetDto>("api/Pet", formData);
-      return response;
+      const petData = {
+        ...data,
+        medicalHistory: data.medicalHistory && {
+          ...data.medicalHistory,
+          lastCheckup: data.medicalHistory.lastCheckup?.toString(),
+        },
+      };
+      return api.post<PetDto>("api/pets", petData);
     },
     onSuccess: () => {
-      toast.success("Pet created successfully");
       queryClient.invalidateQueries({ queryKey: ["pets"] });
+      toast.success("Pet created successfully");
     },
   });
 }
@@ -120,12 +65,20 @@ export function useUpdatePet(id: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdatePetDto) =>
-      api.put<CreatePetDto>(`api/Pet/${id}`, data),
-    onSuccess: () => {
-      toast.success("Pet updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["pet", id] });
+    mutationFn: async (data: UpdatePetDto) => {
+      // Ensure we're returning a PetDto not CreatePetDto
+      const response = await api.put<PetDto>(`api/pets/${id}`, data);
+      return response;
+    },
+    onSuccess: (updatedPet) => {
+      // Update both queries with the new data
+      queryClient.setQueryData(["pet", id], updatedPet);
       queryClient.invalidateQueries({ queryKey: ["pets"] });
+      toast.success("Pet updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to update pet");
+      console.error("Update error:", error);
     },
   });
 }
@@ -134,23 +87,16 @@ export function useDeletePet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      try {
-        const response = await api.delete(`api/Pet/${id}`);
-        // No need to check status code since api.delete handles it
-        return response;
-      } catch (error) {
-        console.error("Delete pet error:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success("Pet deleted successfully");
+    mutationFn: (id: string) => api.delete(`api/pets/${id}`),
+    onSuccess: (_, id) => {
+      // Remove the pet from the cache
+      queryClient.removeQueries({ queryKey: ["pet", id] });
       queryClient.invalidateQueries({ queryKey: ["pets"] });
+      toast.success("Pet deleted successfully");
     },
     onError: (error) => {
       toast.error("Failed to delete pet");
-      console.error("Delete mutation error:", error);
+      console.error("Delete error:", error);
     },
   });
 }

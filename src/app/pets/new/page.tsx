@@ -36,8 +36,12 @@ export default function NewPetPage() {
   };
 
   const handleFinish = async (data: Partial<CreatePetDto>) => {
-    const updatedData = { ...formData, ...data };
-    await createPet.mutateAsync(updatedData);
+    const updatedData = {
+      ...formData,
+      ...data,
+    };
+
+    await createPet.mutateAsync(updatedData as CreatePetDto);
     router.push("/pets");
   };
 

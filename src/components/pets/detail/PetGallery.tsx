@@ -9,17 +9,16 @@ import {
   Film,
   ImageIcon,
 } from "lucide-react";
-import { getImageUrl } from "@/lib/utils/urlTransformer";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MediaUploadModal } from "./MediaUploadModal";
 import { cn } from "@/lib/utils";
+import { MediaResponseDto, MediaType } from "@/lib/types/pet";
 
 interface PetGalleryProps {
-  photos: string[];
-  videos?: string[];
+  media: MediaResponseDto[];
   name: string;
   petId: string;
   showAddMedia?: boolean;
@@ -29,8 +28,7 @@ interface PetGalleryProps {
 }
 
 export function PetGallery({
-  photos,
-  videos = [],
+  media = [],
   name,
   petId,
   showAddMedia = true,
@@ -38,12 +36,12 @@ export function PetGallery({
   aspectRatio = "video",
   variant = "default",
 }: PetGalleryProps) {
-  const [activeType, setActiveType] = useState<"photos" | "videos">("photos");
+  const [activeType, setActiveType] = useState<MediaType>(MediaType.Photo);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const mediaItems = activeType === "photos" ? photos : videos;
-  const hasPhotos = photos.length > 0;
-  const hasVideos = videos.length > 0;
+  const mediaItems = media.filter((item) => item.type === activeType);
+  const hasPhotos = media.some((item) => item.type === MediaType.Photo);
+  const hasVideos = media.some((item) => item.type === MediaType.Video);
 
   const aspectRatioClasses = {
     video: "aspect-video",
@@ -65,6 +63,14 @@ export function PetGallery({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>No media available for {name}</AlertDescription>
           </Alert>
+          {showAddMedia && (
+            <MediaUploadModal petId={petId}>
+              <Button variant="secondary" size="sm" className="ml-4">
+                <ImagePlus className="h-4 w-4 mr-2" />
+                Add Media
+              </Button>
+            </MediaUploadModal>
+          )}
         </CardContent>
       </Card>
     );
@@ -105,10 +111,12 @@ export function PetGallery({
               transition={{ duration: 0.3 }}
               className="absolute inset-0"
             >
-              {activeType === "photos" ? (
+              {mediaItems[currentIndex]?.type === MediaType.Photo ? (
                 <Image
-                  src={getImageUrl(photos[currentIndex])}
-                  alt={`${name}'s photo ${currentIndex + 1}`}
+                  src={mediaItems[currentIndex].url}
+                  alt={`${name}'s ${mediaItems[currentIndex].type} ${
+                    currentIndex + 1
+                  }`}
                   fill
                   className="object-cover"
                   priority
@@ -116,8 +124,8 @@ export function PetGallery({
                 />
               ) : (
                 <video
-                  key={videos[currentIndex]}
-                  src={getImageUrl(videos[currentIndex])}
+                  key={mediaItems[currentIndex]?.url}
+                  src={mediaItems[currentIndex]?.url}
                   className="h-full w-full object-cover"
                   controls
                   playsInline
@@ -166,10 +174,13 @@ export function PetGallery({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setActiveType("photos")}
+                      onClick={() => {
+                        setActiveType(MediaType.Photo);
+                        setCurrentIndex(0);
+                      }}
                       className={cn(
                         "rounded-full px-3",
-                        activeType === "photos" &&
+                        activeType === MediaType.Photo &&
                           "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
                       )}
                     >
@@ -179,10 +190,13 @@ export function PetGallery({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setActiveType("videos")}
+                      onClick={() => {
+                        setActiveType(MediaType.Video);
+                        setCurrentIndex(0);
+                      }}
                       className={cn(
                         "rounded-full px-3",
-                        activeType === "videos" &&
+                        activeType === MediaType.Video &&
                           "bg-gray-900 text-white dark:bg-white dark:text-gray-900"
                       )}
                     >
@@ -196,7 +210,7 @@ export function PetGallery({
               {/* Add Media Button */}
               {showAddMedia && variant === "default" && (
                 <div className="absolute top-4 right-4">
-                  <MediaUploadModal petId={petId} actualPhotos={photos} actualVideos={videos}>
+                  <MediaUploadModal petId={petId}>
                     <Button
                       variant="secondary"
                       size="sm"
@@ -222,7 +236,7 @@ export function PetGallery({
                           ? "w-6 bg-white"
                           : "w-1.5 bg-white/50 hover:bg-white/75"
                       )}
-                      aria-label={`Go to ${activeType} ${index + 1}`}
+                      aria-label={`Go to media ${index + 1}`}
                     />
                   ))}
                 </div>
@@ -232,11 +246,11 @@ export function PetGallery({
         </div>
 
         {/* Thumbnails (only shown in default variant) */}
-        {variant === "default" && (
+        {variant === "default" && mediaItems.length > 0 && (
           <div className="grid grid-cols-6 gap-2 p-4">
             {mediaItems.slice(0, 6).map((item, index) => (
               <button
-                key={index}
+                key={item.id}
                 onClick={() => setCurrentIndex(index)}
                 className={cn(
                   "relative aspect-square rounded-lg overflow-hidden",
@@ -246,10 +260,10 @@ export function PetGallery({
                     : "opacity-70 hover:opacity-100"
                 )}
               >
-                {activeType === "photos" ? (
+                {item.type === MediaType.Photo ? (
                   <Image
-                    src={getImageUrl(item)}
-                    alt={`Thumbnail ${index + 1}`}
+                    src={item.url}
+                    alt={item.title || `Thumbnail ${index + 1}`}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 16vw, 8vw"

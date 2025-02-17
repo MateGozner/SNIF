@@ -12,7 +12,6 @@ export function usePetMatches(petId: string, status?: MatchStatus) {
       api.get<MatchDto[]>(`api/matches`, {
         params: { petId, status },
       }),
-    staleTime: 1000 * 60, // 1 minute
   });
 }
 
@@ -26,7 +25,6 @@ export function usePendingMatches(petId: string) {
           status: "pending",
         },
       }),
-    staleTime: 1000 * 60, // 1 minute
   });
 }
 
@@ -52,7 +50,6 @@ export function useAllPetsPendingMatches(pets?: PetDto[]) {
       return Object.values(response).flat();
     },
     enabled: !!pets?.length,
-    staleTime: 1000 * 60, // 1 minute
   });
 }
 
@@ -75,7 +72,6 @@ export function useAllPetsMatches(pets?: PetDto[]) {
       return Object.values(response).flat();
     },
     enabled: !!pets?.length,
-    staleTime: 1000 * 60,
   });
 }
 
@@ -86,7 +82,6 @@ export function usePotentialMatches(petId: string, purpose?: PetPurpose) {
       api.get<PetDto[]>(`api/matches/potential`, {
         params: { petId, purpose },
       }),
-    staleTime: 1000 * 300, // 5 minutes
   });
 }
 
@@ -94,8 +89,6 @@ export function useMatch(id: string) {
   return useQuery({
     queryKey: ["match", id],
     queryFn: () => api.get<MatchDto>(`api/matches/${id}`),
-    staleTime: 1000 * 60,
-    retry: 3,
   });
 }
 

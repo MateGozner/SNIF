@@ -142,8 +142,7 @@ function MatchCard({
                 whileHover={{ scale: 1.05 }}
               >
                 <PetGallery
-                  photos={match.initiatorPet.photos}
-                  videos={[]}
+                  media={match.initiatorPet.media || []}
                   name={match.initiatorPet.name}
                   petId={match.initiatorPet.id}
                   showAddMedia={false}
@@ -172,8 +171,7 @@ function MatchCard({
               whileHover={{ scale: 1.05 }}
             >
               <PetGallery
-                photos={match.targetPet.photos.slice(0, 1)}
-                videos={[]}
+                media={match.targetPet.media || []}
                 name={match.targetPet.name}
                 petId={match.targetPet.id}
                 showAddMedia={false}

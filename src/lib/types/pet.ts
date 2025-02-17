@@ -12,6 +12,33 @@ export enum PetPurpose {
   Playdate = 2,
 }
 
+export enum MediaType {
+  Photo,
+  Video,
+}
+
+export interface CreateMediaDto {
+  type: MediaType;
+  fileName: string;
+  contentType: string;
+  base64Data: string;
+  title?: string;
+  description?: string;
+}
+
+export interface MediaResponseDto {
+  id: string;
+  url: string;
+  type: MediaType;
+  fileName: string;
+  contentType: string;
+  size: number;
+  title: string;
+  description?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface MedicalHistoryDto {
   isVaccinated: boolean;
   healthIssues: string[];
@@ -30,8 +57,7 @@ export interface PetDto {
   purpose: PetPurpose[];
   personality: string[];
   medicalHistory?: MedicalHistoryDto;
-  photos: string[];
-  videos: string[];
+  media?: MediaResponseDto[];
   location?: LocationDto;
   ownerId: string;
   createdAt: string;
@@ -48,8 +74,7 @@ export interface CreatePetDto {
   personality: string[];
   medicalHistory?: MedicalHistoryDto;
   location?: LocationDto;
-  photos?: File[];
-  videos?: File[];
+  media?: CreateMediaDto[];
 }
 
 export interface UpdatePetDto {

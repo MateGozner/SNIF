@@ -89,9 +89,8 @@ export default function PetDetailPage() {
             transition={{ duration: 0.5 }}
           >
             <PetGallery
-              photos={pet.photos}
+              media={pet.media || []}
               name={pet.name}
-              videos={pet.videos}
               petId={pet.id}
             />
           </motion.div>

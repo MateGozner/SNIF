@@ -5,27 +5,25 @@ import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { X, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MediaType } from "@/lib/types/pet";
 
 export type FileWithPreview = {
   file: File;
   preview: string;
+  type: MediaType;
   uploading: boolean;
   error?: string;
 };
 
 interface MediaUploadCoreProps {
-  photos: FileWithPreview[];
-  videos: FileWithPreview[];
-  onPhotosChange: (photos: FileWithPreview[]) => void;
-  onVideosChange: (videos: FileWithPreview[]) => void;
+  files: FileWithPreview[];
+  onFilesChange: (files: FileWithPreview[]) => void;
   className?: string;
 }
 
 export function MediaUploadCore({
-  photos,
-  videos,
-  onPhotosChange,
-  onVideosChange,
+  files,
+  onFilesChange,
   className,
 }: MediaUploadCoreProps) {
   const onDrop = useCallback(
@@ -33,25 +31,15 @@ export function MediaUploadCore({
       const newFiles = acceptedFiles.map((file) => ({
         file,
         preview: URL.createObjectURL(file),
+        type: file.type.startsWith("image/")
+          ? MediaType.Photo
+          : MediaType.Video,
         uploading: false,
       }));
 
-      const photoFiles = newFiles.filter((f) =>
-        f.file.type.startsWith("image/")
-      );
-      const videoFiles = newFiles.filter((f) =>
-        f.file.type.startsWith("video/")
-      );
-
-      if (photoFiles.length > 0) {
-        onPhotosChange([...photos, ...photoFiles]);
-      }
-
-      if (videoFiles.length > 0) {
-        onVideosChange([...videos, ...videoFiles]);
-      }
+      onFilesChange([...files, ...newFiles]);
     },
-    [photos, videos, onPhotosChange, onVideosChange]
+    [files, onFilesChange]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -65,11 +53,14 @@ export function MediaUploadCore({
 
   useEffect(() => {
     return () => {
-      [...photos, ...videos].forEach((file) => {
+      files.forEach((file) => {
         URL.revokeObjectURL(file.preview);
       });
     };
-  }, [photos, videos]);
+  }, [files]);
+
+  const photos = files.filter((f) => f.type === MediaType.Photo);
+  const videos = files.filter((f) => f.type === MediaType.Video);
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -95,7 +86,7 @@ export function MediaUploadCore({
       </div>
 
       {/* Media Previews */}
-      {(photos.length > 0 || videos.length > 0) && (
+      {files.length > 0 && (
         <div className="space-y-4">
           {/* Photos Grid */}
           {photos.length > 0 && (
@@ -116,7 +107,7 @@ export function MediaUploadCore({
                     {!photo.uploading && (
                       <button
                         onClick={() => {
-                          onPhotosChange(photos.filter((_, i) => i !== index));
+                          onFilesChange(files.filter((_, i) => i !== index));
                         }}
                         className="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-black/75"
                       >
@@ -146,7 +137,7 @@ export function MediaUploadCore({
                     {!video.uploading && (
                       <button
                         onClick={() => {
-                          onVideosChange(videos.filter((_, i) => i !== index));
+                          onFilesChange(files.filter((_, i) => i !== index));
                         }}
                         className="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-black/75"
                       >

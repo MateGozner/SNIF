@@ -39,8 +39,7 @@ export function PotentialMatchCard({
       <Card className="overflow-hidden backdrop-blur-xl bg-white/[0.02] border border-white/[0.05]">
         <div className="relative">
           <PetGallery
-            photos={pet.photos}
-            videos={pet.videos}
+            media={pet.media || []}
             name={pet.name}
             petId={pet.id}
             showAddMedia={false}
