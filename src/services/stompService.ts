@@ -2,101 +2,115 @@
 import { PetMatchNotification } from "@/lib/types/notification";
 import { Client, Message } from "@stomp/stompjs";
 
-const RABBITMQ_BROKER_URL = "ws://localhost:15674/ws";
-const MATCH_QUEUE = "/exchange/snif.events/pet.matches.*";
+const RABBITMQ_BROKER_URL = `ws://localhost:15674/ws`;
+const WATCHLIST_EXCHANGE = "pet.watchlist";
+const MATCH_EXCHANGE = "pet.matches";
 
-let stompClient: Client | null = null;
+export class PetMatchingService {
+  private stompClient: Client | null = null;
+  private messageHandlers: Map<
+    string,
+    ((data: PetMatchNotification) => void)[]
+  > = new Map();
+  private userId: string;
 
-const messageHandlers: ((data: PetMatchNotification) => void)[] = [];
+  constructor(userId: string) {
+    this.userId = userId;
+  }
 
-export const connectToRabbitMQ = () => {
-  console.log("🔄 Initializing RabbitMQ STOMP connection...");
+  connect() {
+    console.log("🔄 Initializing RabbitMQ STOMP connection...");
 
-  try {
-    stompClient = new Client({
+    this.stompClient = new Client({
       brokerURL: RABBITMQ_BROKER_URL,
       connectHeaders: {
         login: "guest",
         passcode: "guest",
         host: "/",
       },
+      onConnect: () => this.handleConnect(),
       onStompError: (frame) => console.error("STOMP Error:", frame),
-      onWebSocketClose: (event) => console.log("WebSocket Closed:", event),
-      onWebSocketError: (event) => console.log("WebSocket Error:", event),
-      onDisconnect: (frame) => console.log("STOMP Disconnect:", frame),
+      onWebSocketClose: () => this.handleDisconnect(),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
     });
 
-    stompClient.onConnect = () => {
-      console.log("✅ Successfully connected to RabbitMQ");
+    this.stompClient.activate();
+  }
 
-      try {
-        console.log(`📬 Subscribing to queue: ${MATCH_QUEUE}`);
-        stompClient?.subscribe(
-          MATCH_QUEUE,
-          (message: Message) => {
-            console.log("📨 Raw message received:", message);
-            try {
-              const notification = JSON.parse(
-                message.body
-              ) as PetMatchNotification;
-              console.log("📩 Parsed notification:", notification);
-              messageHandlers.forEach((handler) => {
-                console.log("🔔 Calling handler with notification");
-                handler(notification);
-              });
-            } catch (error) {
-              console.error(
-                "❌ Failed to process message:",
-                error,
-                message.body
-              );
-            }
-          },
-          {
-            id: "match-sub",
-            ack: "client",
-          }
-        );
-        console.log("✅ Successfully subscribed to queue");
-      } catch (subscribeError) {
-        console.error("❌ Failed to subscribe to queue:", subscribeError);
+  private handleConnect() {
+    console.log("✅ Connected to RabbitMQ");
+
+    // Subscribe to user-specific watchlist queue
+    const watchlistQueue = `/queue/watchlist.${this.userId}`;
+    this.subscribeToQueue(watchlistQueue, "watchlist");
+
+    // Subscribe to user-specific matches
+    const matchesQueue = `/exchange/${MATCH_EXCHANGE}/matches.${this.userId}.#`;
+    this.subscribeToQueue(matchesQueue, "matches");
+  }
+
+  private subscribeToQueue(queue: string, type: string) {
+    console.log(`📬 Subscribing to ${type} queue: ${queue}`);
+
+    this.stompClient?.subscribe(
+      queue,
+      (message: Message) => {
+        try {
+          const notification = JSON.parse(message.body) as PetMatchNotification;
+          console.log(`📩 Received ${type} notification:`, notification);
+
+          const handlers = this.messageHandlers.get(type) || [];
+          handlers.forEach((handler) => handler(notification));
+        } catch (error) {
+          console.error(`❌ Failed to process ${type} message:`, error);
+        }
+      },
+      {
+        id: `${type}-${this.userId}`,
+        ack: "client",
       }
-    };
+    );
+  }
 
-    stompClient.onStompError = (frame) => {
-      console.error("❌ STOMP error:", frame);
-    };
+  private handleDisconnect() {
+    console.log("👋 Disconnected from RabbitMQ");
+    setTimeout(() => {
+      console.log("🔄 Attempting to reconnect...");
+      this.connect();
+    }, 5000);
+  }
 
-    stompClient.activate();
+  subscribeToPetMatches(
+    handler: (data: PetMatchNotification) => void
+  ): () => void {
+    return this.subscribeToType("matches", handler);
+  }
+
+  subscribeToWatchlist(
+    handler: (data: PetMatchNotification) => void
+  ): () => void {
+    return this.subscribeToType("watchlist", handler);
+  }
+
+  private subscribeToType(
+    type: string,
+    handler: (data: PetMatchNotification) => void
+  ): () => void {
+    const handlers = this.messageHandlers.get(type) || [];
+    handlers.push(handler);
+    this.messageHandlers.set(type, handlers);
 
     return () => {
-      console.log("👋 Disconnecting from RabbitMQ...");
-      stompClient?.deactivate();
+      const updatedHandlers = (this.messageHandlers.get(type) || []).filter(
+        (h) => h !== handler
+      );
+      this.messageHandlers.set(type, updatedHandlers);
     };
-  } catch (error) {
-    console.error("❌ Failed to initialize STOMP connection:", error);
-    throw error;
   }
-};
 
-export const subscribeToMatches = (
-  handler: (data: PetMatchNotification) => void
-) => {
-  try {
-    console.log("➕ Adding new match notification subscriber");
-    messageHandlers.push(handler);
-    return () => {
-      console.log("➖ Removing match notification subscriber");
-      const index = messageHandlers.indexOf(handler);
-      if (index > -1) {
-        messageHandlers.splice(index, 1);
-      }
-    };
-  } catch (error) {
-    console.error("❌ Error in subscription handling:", error);
-    throw error;
+  disconnect() {
+    this.stompClient?.deactivate();
   }
-};
+}

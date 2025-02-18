@@ -75,12 +75,38 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({ children }) => {
     }
 
     const configuration: RTCConfiguration = {
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        {
+          urls: [
+            "turn:openrelay.metered.ca:80",
+            "turn:openrelay.metered.ca:443",
+            "turn:openrelay.metered.ca:443?transport=tcp",
+            "turn:openrelay.metered.ca:443?transport=udp",
+          ],
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
+      ],
+      iceTransportPolicy: "all",
+      bundlePolicy: "max-bundle",
+      rtcpMuxPolicy: "require",
+      iceCandidatePoolSize: 10,
     };
 
     console.log("🔧 Setting up new peer connection");
     const pc = new RTCPeerConnection(configuration);
     peerConnection.current = pc;
+
+    pc.onconnectionstatechange = () => {
+      console.log("Connection state changed:", pc.connectionState);
+      if (pc.connectionState === "failed") {
+        console.log("Connection failed, attempting reconnection...");
+        // Implement reconnection logic here
+        handleConnectionFailure();
+      }
+    };
 
     try {
       console.log("📹 Requesting media devices");
@@ -132,6 +158,21 @@ export const VideoProvider: React.FC<VideoProviderProps> = ({ children }) => {
       throw err;
     }
   }, [sendSignal]);
+
+  const handleConnectionFailure = async () => {
+    if (!peerConnection.current || !currentMatchId.current) return;
+    
+    try {
+      const pc = peerConnection.current;
+      // Attempt ICE restart
+      const offer = await pc.createOffer({ iceRestart: true });
+      await pc.setLocalDescription(offer);
+      await sendSignal(currentMatchId.current, offer, "offer");
+    } catch (err) {
+      console.error("Failed to restart ICE:", err);
+      toast.error("Connection failed. Please try rejoining the call.");
+    }
+  };
 
   // Set up SignalR event handlers
   React.useEffect(() => {
