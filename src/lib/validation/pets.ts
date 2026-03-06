@@ -22,7 +22,7 @@ export const basicInfoSchema = z.object({
     .min(1, "Breed is required")
     .refine((val) => {
       if (val === "Other") return true;
-      return DOG_BREEDS.includes(val) || CAT_BREEDS.includes(val);
+      return (DOG_BREEDS as readonly string[]).includes(val) || (CAT_BREEDS as readonly string[]).includes(val);
     }, "Please select a valid breed"),
 
   age: z

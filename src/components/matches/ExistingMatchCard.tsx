@@ -11,6 +11,7 @@ import {
   Calendar,
   PawPrint,
   MessageSquare,
+  MapPin,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { ProfilePictureDto } from "@/lib/types/user";
+import { ParkSelector } from "@/components/parks/ParkSelector";
+import { MeetupLocation } from "@/lib/types/park";
 
 interface ExistingMatchCardProps {
   match: MatchDto;
@@ -180,15 +183,32 @@ export function ExistingMatchCard({
                     />
                   </div>
                   {match.status === MatchStatus.Accepted && (
-                    <Link href={`/messages/${match.id}`}>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-[#2997FF] hover:bg-[#2997FF]/10 transition-all duration-200"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Link href={`/messages/${match.id}`}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-[#2997FF] hover:bg-[#2997FF]/10 transition-all duration-200"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <ParkSelector
+                        onSelect={(location: MeetupLocation) => {
+                          // Park selected for meetup — could be sent via chat or stored
+                          console.log('Meetup park selected:', location);
+                        }}
+                        trigger={
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-emerald-400 hover:bg-emerald-400/10 transition-all duration-200"
+                          >
+                            <MapPin className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    </div>
                   )}
                 </div>
               </div>

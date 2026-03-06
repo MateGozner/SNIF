@@ -9,7 +9,8 @@ export const useNotifications = () => {
     []
   );
   const { user } = useAuthStore();
-  const matchingService = usePetMatching();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const matchingService = usePetMatching() as any;
 
   useEffect(() => {
     if (!matchingService || !user?.id) return;
@@ -17,7 +18,7 @@ export const useNotifications = () => {
     console.log("🔄 Setting up notification subscriptions");
 
     const unsubscribeMatches = matchingService.subscribeToPetMatches(
-      (notification) => {
+      (notification: PetMatchNotification) => {
         console.log("📝 Received match notification:", notification);
         if (notification.OwnerId === user.id) {
           console.log("🚫 Ignoring self-notification");
@@ -28,7 +29,7 @@ export const useNotifications = () => {
     );
 
     const unsubscribeWatchlist = matchingService.subscribeToWatchlist(
-      (notification) => {
+      (notification: PetMatchNotification) => {
         console.log("📝 Received watchlist notification:", notification);
         if (notification.OwnerId === user.id) {
           console.log("🚫 Ignoring self-notification");

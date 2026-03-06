@@ -343,7 +343,7 @@ export function BasicInfo({ initialData, onNext, className }: BasicInfoProps) {
                 {Object.entries(PetPurpose)
                   .filter(([key]) => isNaN(Number(key)))
                   .map(([key, value]) => {
-                    const isSelected = field.value?.includes(value);
+                    const isSelected = field.value?.includes(value as PetPurpose);
                     const Icon =
                       purposeIcons[value as keyof typeof purposeIcons];
 

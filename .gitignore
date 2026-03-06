@@ -35,6 +35,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# secrets & sensitive credentials
+firebase-admin-sdk.json
+*.p12
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

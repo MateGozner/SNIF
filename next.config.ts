@@ -12,6 +12,23 @@ const nextConfig: NextConfig = {
         port: "5000",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "*.blob.core.windows.net",
+      },
+      {
+        protocol: "https",
+        hostname: "snif-backend.azurewebsites.net",
+      },
+      ...(process.env.NEXT_PUBLIC_CDN_HOSTNAME
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: process.env.NEXT_PUBLIC_CDN_HOSTNAME,
+              pathname: "/**",
+            },
+          ]
+        : []),
     ],
   },
 };

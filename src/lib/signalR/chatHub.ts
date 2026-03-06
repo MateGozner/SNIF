@@ -112,12 +112,32 @@ export function useChatHub() {
     await connection.invoke("MarkMessageAsRead", messageId);
   };
 
+  const sendReaction = async (
+    messageId: string,
+    emoji: string,
+    receiverId: string
+  ) => {
+    if (!connection) throw new Error("No connection");
+    await connection.invoke("SendReaction", messageId, emoji, receiverId);
+  };
+
+  const removeReaction = async (
+    messageId: string,
+    emoji: string,
+    receiverId: string
+  ) => {
+    if (!connection) throw new Error("No connection");
+    await connection.invoke("RemoveReaction", messageId, emoji, receiverId);
+  };
+
   return {
     connection,
     sendMessage,
     joinChat,
     leaveChat,
     markMessageAsRead,
+    sendReaction,
+    removeReaction,
     connectionState,
   };
 }

@@ -1,4 +1,5 @@
 import { PetDto, PetPurpose } from "./pet";
+import { MeetupLocation } from "./park";
 
 export enum MatchStatus {
   Pending,
@@ -14,6 +15,7 @@ export interface MatchDto {
   matchPurpose: PetPurpose;
   status: MatchStatus;
   expiresAt?: string;
+  meetupLocation?: MeetupLocation;
 }
 
 export interface CreateMatchDto {

@@ -1,7 +1,7 @@
 // contexts/ChatContext.tsx
 import { createContext, useContext, useEffect, useMemo } from "react";
 import { useChatHub } from "@/lib/signalR/chatHub";
-import { MessageDto } from "@/lib/types/message";
+import { MessageDto, MessageReactionDto } from "@/lib/types/message";
 import { produce } from "immer";
 import React from "react";
 
@@ -21,6 +21,16 @@ interface ChatContextType extends ChatState {
   joinChat: (matchId: string) => Promise<void>;
   leaveChat: (matchId: string) => Promise<void>;
   markMessageAsRead: (messageId: string) => Promise<void>;
+  sendReaction: (
+    messageId: string,
+    emoji: string,
+    receiverId: string
+  ) => Promise<void>;
+  removeReaction: (
+    messageId: string,
+    emoji: string,
+    receiverId: string
+  ) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -41,6 +51,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     joinChat: hubJoinChat,
     leaveChat: hubLeaveChat,
     markMessageAsRead: hubMarkMessageAsRead,
+    sendReaction: hubSendReaction,
+    removeReaction: hubRemoveReaction,
     connectionState,
   } = useChatHub();
 
@@ -83,12 +95,64 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       );
     };
 
+    const handleReceiveReaction = (data: {
+      messageId: string;
+      reaction: MessageReactionDto;
+    }) => {
+      setState((currentState) =>
+        produce(currentState, (draft) => {
+          Object.keys(draft.messages).forEach((matchId) => {
+            const msg = draft.messages[matchId].find(
+              (m) => m.id === data.messageId
+            );
+            if (msg) {
+              if (!msg.reactions) msg.reactions = [];
+              if (
+                !msg.reactions.some(
+                  (r) =>
+                    r.userId === data.reaction.userId &&
+                    r.emoji === data.reaction.emoji
+                )
+              ) {
+                msg.reactions.push(data.reaction);
+              }
+            }
+          });
+        })
+      );
+    };
+
+    const handleReactionRemoved = (data: {
+      messageId: string;
+      userId: string;
+      emoji: string;
+    }) => {
+      setState((currentState) =>
+        produce(currentState, (draft) => {
+          Object.keys(draft.messages).forEach((matchId) => {
+            const msg = draft.messages[matchId].find(
+              (m) => m.id === data.messageId
+            );
+            if (msg && msg.reactions) {
+              msg.reactions = msg.reactions.filter(
+                (r) => !(r.userId === data.userId && r.emoji === data.emoji)
+              );
+            }
+          });
+        })
+      );
+    };
+
     connection.on("ReceiveMessage", handleReceiveMessage);
     connection.on("MessageRead", handleMessageRead);
+    connection.on("ReceiveReaction", handleReceiveReaction);
+    connection.on("ReactionRemoved", handleReactionRemoved);
 
     return () => {
       connection.off("ReceiveMessage", handleReceiveMessage);
       connection.off("MessageRead", handleMessageRead);
+      connection.off("ReceiveReaction", handleReceiveReaction);
+      connection.off("ReactionRemoved", handleReactionRemoved);
     };
   }, [connection]);
 
@@ -128,6 +192,30 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     [connection, hubMarkMessageAsRead]
   );
 
+  const sendReaction = React.useCallback(
+    async (
+      messageId: string,
+      emoji: string,
+      receiverId: string
+    ): Promise<void> => {
+      if (!connection) throw new Error("No connection available");
+      await hubSendReaction(messageId, emoji, receiverId);
+    },
+    [connection, hubSendReaction]
+  );
+
+  const removeReaction = React.useCallback(
+    async (
+      messageId: string,
+      emoji: string,
+      receiverId: string
+    ): Promise<void> => {
+      if (!connection) throw new Error("No connection available");
+      await hubRemoveReaction(messageId, emoji, receiverId);
+    },
+    [connection, hubRemoveReaction]
+  );
+
   const value = React.useMemo(
     () => ({
       ...state,
@@ -135,8 +223,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
       joinChat,
       leaveChat,
       markMessageAsRead,
+      sendReaction,
+      removeReaction,
     }),
-    [state, sendMessage, joinChat, leaveChat, markMessageAsRead]
+    [state, sendMessage, joinChat, leaveChat, markMessageAsRead, sendReaction, removeReaction]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

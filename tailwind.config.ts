@@ -25,7 +25,7 @@ export default {
   ],
   theme: {
     container: {
-      center: "true",
+      center: true,
       padding: "2rem",
       screens: {
         "2xl": "1400px",
@@ -36,15 +36,15 @@ export default {
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
-          spotlight: {
-            "0%": {
-              opacity: 0,
-              transform: "translate(-72%, -62%) scale(0.5)",
-            },
-            "100%": {
-              opacity: 1,
-              transform: "translate(-50%,-40%) scale(1)",
-            },
+        },
+        spotlight: {
+          "0%": {
+            opacity: "0",
+            transform: "translate(-72%, -62%) scale(0.5)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translate(-50%,-40%) scale(1)",
           },
         },
         "accordion-up": {

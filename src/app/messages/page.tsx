@@ -1,9 +1,15 @@
-//app/messages/page.tsx
+import type { Metadata } from "next";
+import MessagesPage from "./MessagesContent";
 
-export default function MessagesPage() {
-  return (
-    <div className="h-full flex items-center justify-center text-white/40">
-      Select a conversation to start messaging
-    </div>
-  );
+export const metadata: Metadata = {
+  title: "Messages",
+  description: "Chat with other pet owners on SNIF.",
+  openGraph: {
+    title: "Messages",
+    description: "Chat with other pet owners on SNIF.",
+  },
+};
+
+export default function Page() {
+  return <MessagesPage />;
 }

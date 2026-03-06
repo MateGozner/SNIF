@@ -1,4 +1,11 @@
 //lib/types/message.ts
+export interface MessageReactionDto {
+  id: string;
+  userId: string;
+  emoji: string;
+  createdAt: string;
+}
+
 export interface MessageDto {
   id: string;
   content: string;
@@ -7,6 +14,11 @@ export interface MessageDto {
   matchId: string;
   isRead: boolean;
   createdAt: string;
+  attachmentUrl?: string;
+  attachmentType?: string;
+  attachmentFileName?: string;
+  attachmentSizeBytes?: number;
+  reactions: MessageReactionDto[];
 }
 
 export interface CreateMessageDto {

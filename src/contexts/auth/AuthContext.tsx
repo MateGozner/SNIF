@@ -66,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: response.id,
         email: response.email,
         name: response.name,
+        role: response.role,
         location: response.location,
       });
       router.push("/");
@@ -92,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         isLoading: loading,
         user,
+        role: user?.role,
         login,
         logout,
       }}

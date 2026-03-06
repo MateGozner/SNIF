@@ -37,12 +37,14 @@ export interface AuthToken {
   exp: number;
   email: string;
   name: string;
+  role?: string;
 }
 
 export interface User {
   id: string;
   email: string;
   name: string;
+  role?: string;
   location?: LocationDto;
 }
 
@@ -66,6 +68,7 @@ export interface AuthResponse {
   id: string;
   email: string;
   name: string;
+  role?: string;
   location?: LocationDto;
 }
 
@@ -80,6 +83,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: User | null;
+  role: string | undefined;
   login: (
     email: string,
     password: string,

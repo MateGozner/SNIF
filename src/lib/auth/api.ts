@@ -40,6 +40,7 @@ export const validateToken = async (): Promise<AuthResponse | null> => {
         id: data.id,
         email: data.email,
         name: data.name,
+        role: data.role,
         location: data.location,
       });
       return data;
